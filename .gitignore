@@ -30,3 +30,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Playwright MCP screenshots, snapshots and console logs
+.playwright-mcp/

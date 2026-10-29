@@ -1,4 +1,5 @@
 import babel from '@rolldown/plugin-babel';
+import tailwindcss from '@tailwindcss/vite';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { defineConfig, lazyPlugins } from 'vite-plus';
 
@@ -124,5 +125,8 @@ export default defineConfig({
     // Path aliases are defined once, in tsconfig.app.json "paths".
     tsconfigPaths: true,
   },
-  plugins: lazyPlugins(() => [react(), babel({ presets: [reactCompilerPreset()] })]),
+  test: {
+    environment: 'jsdom',
+  },
+  plugins: lazyPlugins(() => [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()]),
 });

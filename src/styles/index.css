@@ -1,0 +1,46 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Space Grotesk', sans-serif; /* 500, 700: headings, card faces, numbers */
+  --font-sans: 'Inter', system-ui, sans-serif; /* 400–600: body */
+
+  /* Chrome */
+  --color-ink: #12161f; /* primary text, primary buttons, current-row highlight */
+  --color-body: #333a47; /* paragraph text */
+  --color-muted: #4a5363; /* secondary text, labels */
+  --color-line: #d6dbe3; /* borders, inactive progress */
+  --color-line-strong: #c3cad5; /* input / secondary button borders */
+  --color-page: #eef1f5; /* page background */
+  --color-subtle: #f5f7fa; /* cards on white, inactive rows */
+  --color-surface: #ffffff;
+  --color-link: #1f5fcc;
+  --color-link-hover: #123e8a;
+  --color-danger: #a3192c; /* "Reset game" text */
+
+  /* Table (dark play area) */
+  --color-table: #172131;
+  --color-table-raised: #22304a; /* opponent tiles, disabled buttons */
+  --color-table-deep: #0f1724; /* hand tray */
+  --color-table-back: #2b3a55; /* card backs, draw pile */
+  --color-table-line: #4a5a75; /* dashed phase slots */
+  --color-table-muted: #aeb8c8; /* labels on the table */
+  --color-table-soft: #dce2eb;
+  --color-table-disabled: #8e9aae;
+  --color-focus: #7fb0ff; /* focus ring, selected card ring, secondary button border */
+
+  /* Cards */
+  --color-card-red: #c8283c;
+  --color-card-blue: #1f5fcc;
+  --color-card-green: #14804a;
+  --color-card-yellow: #f2b51b; /* uses ink text, not white */
+  --color-card-wild: #12161f;
+  --color-card-skip: #6b4fb8;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-page);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+}
