@@ -1,21 +1,24 @@
 import { combineReducers, configureStore, createListenerMiddleware } from '@reduxjs/toolkit';
 
+import { gameReducer, isGameState } from '@features/game';
 import { isSetupState, setupReducer } from '@features/setup';
 
 import { loadJson, saveJson } from '@lib/storage';
 
 export const STORAGE_KEY = 'phase10:state';
 
-const rootReducer = combineReducers({ setup: setupReducer });
+const rootReducer = combineReducers({ setup: setupReducer, game: gameReducer });
 
 export type RootState = ReturnType<typeof rootReducer>;
 
 export function loadPersistedState(): Partial<RootState> {
   const saved = loadJson(STORAGE_KEY);
-  if (typeof saved !== 'object' || saved === null || !('setup' in saved)) {
+  if (typeof saved !== 'object' || saved === null) {
     return {};
   }
-  return isSetupState(saved.setup) ? { setup: saved.setup } : {};
+  const setup = 'setup' in saved && isSetupState(saved.setup) ? { setup: saved.setup } : {};
+  const game = 'game' in saved && isGameState(saved.game) ? { game: saved.game } : {};
+  return { ...setup, ...game };
 }
 
 export function makeStore(preloadedState?: Partial<RootState>) {
@@ -23,8 +26,8 @@ export function makeStore(preloadedState?: Partial<RootState>) {
   persistence.startListening({
     predicate: () => true,
     effect: (_action, api) => {
-      const { setup } = api.getState();
-      saveJson(STORAGE_KEY, { setup });
+      const { setup, game } = api.getState();
+      saveJson(STORAGE_KEY, { setup, game });
     },
   });
 

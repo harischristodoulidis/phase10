@@ -44,8 +44,9 @@ describe('HomePage', () => {
   it('lists all ten phases from the engine', () => {
     renderPage();
 
-    for (const { label } of PHASES) {
-      expect(screen.getByText(label)).toBeTruthy();
+    const items = screen.getAllByRole('listitem').map((item) => item.textContent);
+    for (const { phase, label } of PHASES) {
+      expect(items).toContain(`Phase ${phase}:${label}`);
     }
   });
 

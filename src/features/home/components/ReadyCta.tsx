@@ -1,7 +1,8 @@
 import { Link } from 'react-router';
 
+import arrowRightIcon from '@assets/icons/arrow-right.svg';
 import { buttonClasses } from '@ui/buttonClasses';
-import { ArrowRightIcon } from '@ui/icons';
+import { Icon } from '@ui/Icon';
 
 import { CTA_COPY, HOME_COPY } from '../constants';
 
@@ -14,7 +15,7 @@ export function ReadyCta() {
       </div>
       <Link to="/setup" className={buttonClasses({ variant: 'inverse', size: 'lg' })}>
         {HOME_COPY.setupCta}
-        <ArrowRightIcon />
+        <Icon src={arrowRightIcon} />
       </Link>
     </section>
   );

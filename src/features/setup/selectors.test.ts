@@ -5,7 +5,7 @@ import type { RootState } from '@app/store';
 import { selectActiveNames, selectCanStart, selectPlayerCount } from './selectors';
 
 function stateWith(playerCount: RootState['setup']['playerCount'], names: string[]): RootState {
-  return { setup: { playerCount, names } };
+  return { setup: { playerCount, names }, game: null };
 }
 
 describe('setup selectors', () => {

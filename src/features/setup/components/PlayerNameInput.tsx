@@ -1,8 +1,9 @@
 import type { SeatColor } from '@features/game-engine';
 
 import { Badge } from '@ui/Badge';
+import { SeatBadge } from '@ui/SeatBadge';
 
-import { MAX_NAME_LENGTH, SEAT_BADGE_CLASSES, SETUP_COPY } from '../constants';
+import { MAX_NAME_LENGTH, SETUP_COPY } from '../constants';
 
 type PlayerNameInputProps = {
   seat: number;
@@ -16,13 +17,8 @@ export function PlayerNameInput({ seat, color, name, isDealer, onChange }: Playe
   const id = `player-name-${seat}`;
   const seatNumber = seat + 1;
   return (
-    <li className="flex items-center gap-3">
-      <span
-        aria-hidden="true"
-        className={`flex size-11 shrink-0 items-center justify-center rounded-full font-display text-lg font-bold ${SEAT_BADGE_CLASSES[color]}`}
-      >
-        {seatNumber}
-      </span>
+    <li className="flex items-center gap-3.5">
+      <SeatBadge variant="badge" tone={color} seat={seatNumber} />
       <label htmlFor={id} className="sr-only">
         {SETUP_COPY.nameLabel(seatNumber)}
       </label>
@@ -33,7 +29,7 @@ export function PlayerNameInput({ seat, color, name, isDealer, onChange }: Playe
         maxLength={MAX_NAME_LENGTH}
         placeholder={SETUP_COPY.placeholder(seatNumber)}
         onChange={(e) => onChange(e.target.value)}
-        className="min-h-11 w-full min-w-0 rounded-xl border border-line-strong bg-surface px-4 text-ink placeholder:text-muted"
+        className="h-13 w-full min-w-0 flex-1 rounded-xl border border-line-strong bg-field px-4 text-[17px] text-ink placeholder:text-muted"
       />
       {isDealer && <Badge size="sm">{SETUP_COPY.dealsFirst}</Badge>}
     </li>

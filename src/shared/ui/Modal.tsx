@@ -1,7 +1,9 @@
 import { useId, type ReactNode } from 'react';
 
+import closeIcon from '@assets/icons/close.svg';
+
+import { Icon } from './Icon';
 import { IconButton } from './IconButton';
-import { CloseIcon } from './icons';
 import { useDialog } from './useDialog';
 
 export type ModalKind = 'dialog' | 'confirm';
@@ -19,7 +21,7 @@ type ModalProps = {
 
 const KIND_CLASSES = {
   dialog: {
-    panel: 'max-h-[calc(100dvh-48px)] max-w-[680px] rounded-3xl',
+    panel: 'max-h-[calc(100dvh-48px)] max-w-[680px] overflow-y-auto rounded-3xl',
     body: 'gap-6 p-8',
     title: 'text-[28px]',
   },
@@ -55,7 +57,9 @@ export function Modal({
           <h2 id={titleId} className={`font-display leading-tight font-bold ${styles.title}`}>
             {title}
           </h2>
-          {!isConfirm && <IconButton label={closeLabel} icon={<CloseIcon />} onClick={onClose} />}
+          {!isConfirm && (
+            <IconButton label={closeLabel} icon={<Icon src={closeIcon} />} onClick={onClose} />
+          )}
         </div>
         {description !== undefined && (
           <p id={descriptionId} className="leading-normal text-body">

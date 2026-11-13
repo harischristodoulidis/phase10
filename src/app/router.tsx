@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 
+import { GamePage } from '@features/game';
 import { HomePage } from '@features/home';
 import { SetupPage } from '@features/setup';
 
@@ -12,6 +13,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: HomePage },
       { path: 'setup', Component: SetupPage },
+      { path: 'game', Component: GamePage },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

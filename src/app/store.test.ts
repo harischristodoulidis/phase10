@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 
+import { gameStarted } from '@features/game';
 import { playerCountChanged } from '@features/setup';
 
 import { loadPersistedState, makeStore, STORAGE_KEY } from './store';
@@ -27,12 +28,24 @@ describe('store persistence', () => {
     expect(loadPersistedState()).toEqual({});
   });
 
-  it('saves setup to localStorage after an action', () => {
+  it('saves setup and game to localStorage after an action', () => {
     const store = makeStore();
     store.dispatch(playerCountChanged(5));
 
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')).toEqual({
       setup: store.getState().setup,
+      game: null,
     });
+  });
+
+  it('loads a saved game and drops an invalid one', () => {
+    const store = makeStore();
+    store.dispatch(gameStarted(['A', 'B']));
+    const { game } = store.getState();
+
+    expect(loadPersistedState()).toEqual({ setup: store.getState().setup, game });
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ game: { players: [] } }));
+    expect(loadPersistedState()).toEqual({});
   });
 });

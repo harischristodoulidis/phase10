@@ -2,8 +2,9 @@ import { Fragment } from 'react';
 
 import { Link } from 'react-router';
 
+import arrowRightIcon from '@assets/icons/arrow-right.svg';
 import { buttonClasses } from '@ui/buttonClasses';
-import { ArrowRightIcon } from '@ui/icons';
+import { Icon } from '@ui/Icon';
 
 import { HOME_COPY, SECTION_IDS } from '../constants';
 import { HeroCards } from './HeroCards';
@@ -27,7 +28,7 @@ export function Hero() {
         <div className="flex flex-wrap items-center gap-3">
           <Link to="/setup" className={buttonClasses({ variant: 'primary', size: 'lg' })}>
             {HOME_COPY.setupCta}
-            <ArrowRightIcon />
+            <Icon src={arrowRightIcon} />
           </Link>
           <a
             href={`#${SECTION_IDS.how}`}

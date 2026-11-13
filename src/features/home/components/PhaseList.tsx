@@ -19,7 +19,11 @@ export function PhaseList() {
             padding="sm"
             className="gap-1.5"
           >
-            <span className="font-display text-[28px] font-bold">{phase}</span>
+            <span className="font-display text-[28px] font-bold">
+              <span className="sr-only">Phase </span>
+              {phase}
+              <span className="sr-only">:</span>
+            </span>
             <span className="text-[15px]">{label}</span>
           </Card>
         ))}

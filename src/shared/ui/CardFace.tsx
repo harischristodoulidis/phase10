@@ -1,6 +1,6 @@
 export type CardTone = 'red' | 'blue' | 'green' | 'yellow' | 'wild' | 'skip';
 
-type CardFaceSize = 'md' | 'sm';
+export type CardFaceSize = 'pile' | 'md' | 'slot' | 'sm';
 
 type CardFaceProps = {
   tone: CardTone;
@@ -8,6 +8,8 @@ type CardFaceProps = {
   size?: CardFaceSize;
   className?: string;
 };
+
+type LabelKind = 'number' | 'wild' | 'skip';
 
 const TONE_CLASSES = {
   red: 'bg-card-red text-white',
@@ -19,24 +21,30 @@ const TONE_CLASSES = {
 } as const satisfies Record<CardTone, string>;
 
 const SIZE_CLASSES = {
+  pile: 'h-[136px] w-24 rounded-[14px] border-3 shadow-pile-top',
   md: 'h-[104px] w-[72px] rounded-xl border-3 shadow-md',
+  slot: 'h-[68px] w-12 rounded-[9px] border-2',
   sm: 'h-12 w-[34px] rounded-[7px] border-2 text-lg shadow-sm',
 } as const satisfies Record<CardFaceSize, string>;
 
-function labelClass(tone: CardTone, size: CardFaceSize): string {
-  if (size === 'sm') {
-    return '';
+const LABEL_CLASSES = {
+  pile: { number: 'text-5xl', wild: 'text-5xl', skip: 'text-lg' },
+  md: { number: 'text-[40px]', wild: 'text-[34px]', skip: 'text-lg' },
+  slot: { number: 'text-2xl', wild: 'text-2xl', skip: 'text-[10px]' },
+  sm: { number: '', wild: '', skip: '' },
+} as const satisfies Record<CardFaceSize, Record<LabelKind, string>>;
+
+function labelKind(tone: CardTone): LabelKind {
+  if (tone === 'wild' || tone === 'skip') {
+    return tone;
   }
-  if (tone === 'skip') {
-    return 'text-lg';
-  }
-  return tone === 'wild' ? 'text-[34px]' : 'text-[40px]';
+  return 'number';
 }
 
 export function CardFace({ tone, label, size = 'md', className = '' }: CardFaceProps) {
   return (
     <div
-      className={`flex shrink-0 items-center justify-center border-surface font-display font-bold ${TONE_CLASSES[tone]} ${SIZE_CLASSES[size]} ${labelClass(tone, size)} ${className}`}
+      className={`flex shrink-0 items-center justify-center border-surface font-display font-bold ${TONE_CLASSES[tone]} ${SIZE_CLASSES[size]} ${LABEL_CLASSES[size][labelKind(tone)]} ${className}`}
     >
       {label}
     </div>
