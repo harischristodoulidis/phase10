@@ -23,7 +23,7 @@ export function GameOverPage({ game }: GameOverPageProps) {
         game={game}
         nextPlayerId={null}
         highlightedPlayerId={result.winner.id}
-        showsTableInfo={false}
+        isRoundOver
         onReset={startOver}
       >
         <GameOverTable round={game.round} result={result} onNewGame={startOver} />

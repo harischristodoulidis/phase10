@@ -123,6 +123,21 @@ describe('hit', () => {
     expect(next.turnStep).toBe('done');
     expect(next.lastAction).toBe('Haris went out');
   });
+
+  it('wins the tiebreak when the last card is hit', () => {
+    const tiebreak = {
+      ...state,
+      isTiebreak: true,
+      players: [
+        { ...state.players[0], phase: 10 as const, hand: [seven] },
+        { ...state.players[1], phase: 10 as const },
+      ],
+    };
+    const next = unwrap(hit(tiebreak, seven.id, 'Maria-g1'));
+
+    expect(next.view).toBe('gameOver');
+    expect(next.winnerId).toBe(state.players[0].id);
+  });
 });
 
 describe('discard', () => {

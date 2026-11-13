@@ -13,7 +13,7 @@ type GameShellProps = {
   game: GameState;
   nextPlayerId: string | null;
   highlightedPlayerId?: string;
-  showsTableInfo?: boolean;
+  isRoundOver?: boolean;
   onReset: () => void;
   children: ReactNode;
 };
@@ -24,7 +24,7 @@ export function GameShell({
   game,
   nextPlayerId,
   highlightedPlayerId,
-  showsTableInfo = true,
+  isRoundOver = false,
   onReset,
   children,
 }: GameShellProps) {
@@ -38,7 +38,7 @@ export function GameShell({
         <TurnHeader
           round={game.round}
           tableInfo={
-            showsTableInfo ? TURN_COPY.tableInfo(dealerOf(game).name, game.drawPile.length) : null
+            isRoundOver ? null : TURN_COPY.tableInfo(dealerOf(game).name, game.drawPile.length)
           }
           onRules={() => setDialog('rules')}
           onReset={() => setDialog('reset')}
@@ -53,7 +53,11 @@ export function GameShell({
           />
         </div>
       </div>
-      <RulesModal open={dialog === 'rules'} onClose={closeDialog} currentPhase={player.phase} />
+      <RulesModal
+        open={dialog === 'rules'}
+        onClose={closeDialog}
+        currentPhase={isRoundOver ? null : player.phase}
+      />
       <ResetGameDialog open={dialog === 'reset'} onClose={closeDialog} onConfirm={onReset} />
     </>
   );

@@ -19,7 +19,10 @@ export function RoundSummaryTable({ round, summary, onDeal }: RoundSummaryTableP
       title={isTiebreak ? ROUND_COPY.tieTitle : ROUND_COPY.title(summary.wentOut.name)}
       subtitle={
         isTiebreak
-          ? ROUND_COPY.tieDetails(tiedPlayers.map((player) => player.name))
+          ? ROUND_COPY.tieDetails(
+              tiedPlayers.map((player) => player.name),
+              tiedPlayers.length < summary.results.length
+            )
           : ROUND_COPY.details(nextDealer.name, round + 1)
       }
       listTitle={ROUND_COPY.resultsTitle}

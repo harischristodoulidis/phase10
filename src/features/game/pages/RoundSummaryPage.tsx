@@ -18,12 +18,7 @@ export function RoundSummaryPage({ game }: RoundSummaryPageProps) {
   return (
     <>
       <title>{ROUND_COPY.pageTitle(game.round)}</title>
-      <GameShell
-        game={game}
-        nextPlayerId={null}
-        showsTableInfo={false}
-        onReset={() => dispatch(gameReset())}
-      >
+      <GameShell game={game} nextPlayerId={null} isRoundOver onReset={() => dispatch(gameReset())}>
         <RoundSummaryTable
           round={game.round}
           summary={summary}

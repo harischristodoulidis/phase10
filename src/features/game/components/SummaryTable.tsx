@@ -1,9 +1,10 @@
 import { useId, type ReactNode } from 'react';
 
 import arrowRightIcon from '@assets/icons/arrow-right.svg';
-import { focusOnMount } from '@lib/focusOnMount';
 import { Button } from '@ui/Button';
 import { Icon } from '@ui/Icon';
+
+import { TableStage } from './TableStage';
 
 type SummaryTableProps = {
   decor?: ReactNode;
@@ -18,31 +19,15 @@ type SummaryTableProps = {
 };
 
 export function SummaryTable({
-  decor,
-  status,
-  title,
-  subtitle,
   listTitle,
   actionLabel,
   onAction,
-  hint,
   children,
+  ...stage
 }: SummaryTableProps) {
   const listId = useId();
   return (
-    <main className="flex min-h-[640px] min-w-0 flex-[999_1_640px] flex-col items-center justify-center gap-7 rounded-3xl bg-table px-4 py-12 text-center text-white focus-ring-dark sm:px-8">
-      {decor}
-      <div className="flex flex-col items-center gap-2.5">
-        <p className="text-[15px] text-table-muted">{status}</p>
-        <h1
-          ref={focusOnMount}
-          tabIndex={-1}
-          className="font-display text-[44px] leading-tight font-bold tracking-[-0.01em] outline-none sm:text-[56px]"
-        >
-          {title}
-        </h1>
-        <p className="text-lg text-table-soft">{subtitle}</p>
-      </div>
+    <TableStage {...stage}>
       <section
         aria-labelledby={listId}
         className="flex w-full max-w-[560px] flex-col gap-2.5 text-left"
@@ -61,7 +46,6 @@ export function SummaryTable({
       >
         {actionLabel}
       </Button>
-      <p className="text-sm text-table-muted">{hint}</p>
-    </main>
+    </TableStage>
   );
 }

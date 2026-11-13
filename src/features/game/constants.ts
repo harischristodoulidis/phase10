@@ -98,8 +98,8 @@ export const ROUND_COPY = {
   title: (name: string) => `${name} went out`,
   tieTitle: 'Tie on Phase 10',
   details: (dealer: string, round: number) => `${dealer} deals Round ${round}`,
-  tieDetails: (names: readonly string[]) =>
-    `${nameList(names)} replay Phase 10 · Everyone else sits out`,
+  tieDetails: (names: readonly string[], hasSitOuts: boolean) =>
+    `${nameList(names)} replay Phase 10${hasSitOuts ? ' · Everyone else sits out' : ''}`,
   resultsTitle: 'This round',
   wentOut: 'Went out',
   advanced: (from: number, to: number) => `Phase ${from} done · on to Phase ${to}`,

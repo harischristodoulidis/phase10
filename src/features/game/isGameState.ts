@@ -61,19 +61,27 @@ function isPlayer(value: unknown): boolean {
   );
 }
 
-// Old saves: a tiebreak shows as someone sitting out, or a round summary after a Phase 10 lay-down.
-function guessTiebreak(value: Record<string, unknown>, players: Record<string, unknown>[]) {
+function isAllPlayersTie(value: Record<string, unknown>, players: Record<string, unknown>[]) {
   return (
-    players.some((player) => player.isSittingOut === true) ||
-    (value.view === 'roundSummary' &&
-      players.some((player) => player.phase === 10 && player.hasLaidDown === true))
+    value.view === 'roundSummary' &&
+    players.every(
+      (player) =>
+        player.phase === 10 && player.hasLaidDown === true && player.score === players[0].score
+    )
   );
+}
+
+// Old saves: a tiebreak shows as someone sitting out, or as everyone finishing level.
+function guessTiebreak(value: Record<string, unknown>, players: Record<string, unknown>[]) {
+  return players.some((player) => player.isSittingOut === true) || isAllPlayersTie(value, players);
 }
 
 // Best guess for old saves: a 9 → 10 lay-down in the last round can't be told from a finish.
 function guessFinisherIds(players: Record<string, unknown>[], isTiebreak: unknown) {
+  const isTied = (player: Record<string, unknown>) =>
+    isTiebreak === true && player.isSittingOut !== true;
   return players
-    .filter((player) => player.phase === 10 && (player.hasLaidDown === true || isTiebreak === true))
+    .filter((player) => player.phase === 10 && (player.hasLaidDown === true || isTied(player)))
     .map((player) => player.id);
 }
 

@@ -1,23 +1,29 @@
 import { describe, expect, it } from 'vite-plus/test';
 
+import { startNextRound, type Player } from '@features/game-engine';
+
 import { finalStandings } from './finalStandings';
 import { goOut, makeGame, num, withPlayer } from './test/makeGame';
 
 // Ana goes out on Phase 10; Ben and Cy are given the phase, laid-down flag and score passed in.
-function finalRound(ben: object, cy: object) {
+function finalRound(ben: Partial<Player>, cy: Partial<Player>) {
   const game = makeGame([num(5)]);
   const ana = withPlayer(game, 'Ana', { phase: 10, hasLaidDown: true, score: 50 });
   return goOut(withPlayer(withPlayer(ana, 'Ben', { hand: [num(1)], ...ben }), 'Cy', cy));
 }
 
 // Ana and Ben tie on 100 and replay Phase 10; Cy finished on more points or sat at Phase 9.
-function tiebreakOver(cy: object) {
+function tiebreakOver(cy: Partial<Player>) {
   const game = makeGame([num(5)]);
   const ana = withPlayer(game, 'Ana', { phase: 10, hasLaidDown: true, score: 100 });
   const ben = withPlayer(ana, 'Ben', { phase: 10, hasLaidDown: true, score: 95, hand: [num(1)] });
-  const tie = goOut(withPlayer(ben, 'Cy', { hand: [num(2)], ...cy }));
-  const tiebreak = { ...tie, view: 'turn' as const, currentPlayerIndex: 1 };
-  return goOut(withPlayer(tiebreak, 'Ben', { hand: [num(9)], score: 150 }));
+  const dealt = startNextRound(goOut(withPlayer(ben, 'Cy', { hand: [num(2)], ...cy })));
+  if (!dealt.ok) {
+    throw new Error(dealt.reason);
+  }
+  const tiebreak = { ...dealt.value, view: 'turn' as const, currentPlayerIndex: 1 };
+  const anaCaught = withPlayer(tiebreak, 'Ana', { hand: [num(3)] });
+  return goOut(withPlayer(anaCaught, 'Ben', { hand: [num(9)], score: 150 }));
 }
 
 function rows(game: ReturnType<typeof finalRound>) {
@@ -66,7 +72,7 @@ describe('finalStandings', () => {
   });
 
   it('ranks a finisher who sat out the tiebreak among the finishers, by total', () => {
-    const result = finalStandings(tiebreakOver({ phase: 10, hasLaidDown: true, score: 100 }));
+    const result = finalStandings(tiebreakOver({ phase: 10, hasLaidDown: true, score: 110 }));
 
     expect([result.winner.name, result.reason]).toEqual(['Ben', 'tiebreak']);
     expect(result.standings.map((s) => [s.player.name, s.hasFinished])).toEqual([

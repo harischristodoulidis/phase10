@@ -60,6 +60,14 @@ describe('GameOverPage', () => {
     expect(rows.map((row) => row.getAttribute('aria-current'))).toEqual([null, 'true', null]);
   });
 
+  it('marks no current phase in the rules once the game is over', async () => {
+    renderGame(finishedGame());
+
+    await userEvent.click(screen.getByRole('button', { name: 'Rules' }));
+
+    expect(within(screen.getByRole('dialog')).queryByText('Current')).toBeNull();
+  });
+
   it('explains a tiebreak win', () => {
     renderGame(tiebreakGame());
 

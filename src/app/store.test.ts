@@ -49,16 +49,16 @@ describe('store persistence', () => {
     expect(loadPersistedState()).toEqual({});
   });
 
-  it('loads a game saved before the tiebreak flag existed', () => {
+  it('loads a game saved before the tiebreak flag and finisher list existed', () => {
     const store = makeStore();
     store.dispatch(gameStarted(['A', 'B']));
     const { game } = store.getState();
     if (game === null) {
       throw new Error('No game started.');
     }
-    const { isTiebreak: _, ...oldGame } = game;
+    const { isTiebreak: _, finisherIds: __, ...oldGame } = game;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ game: oldGame }));
 
-    expect(loadPersistedState().game).toEqual({ ...oldGame, isTiebreak: false });
+    expect(loadPersistedState().game).toEqual({ ...oldGame, isTiebreak: false, finisherIds: [] });
   });
 });
