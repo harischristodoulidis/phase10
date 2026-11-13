@@ -18,6 +18,7 @@ export type {
   WildCard,
 } from './types';
 export { CARD_COLORS, CARD_VALUES, HAND_SIZE, SEAT_COLORS } from './constants';
+export { leftOf } from './deck';
 export { getPhase, PHASES, phaseCardCount } from './phases';
 export { canHit, runRange } from './hit';
 export type { DrawSource } from './draw';

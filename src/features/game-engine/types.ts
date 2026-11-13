@@ -64,4 +64,6 @@ export type GameState = {
   lastAction: string | null;
   rngSeed: number;
   winnerId: string | null;
+  isTiebreak: boolean;
+  finisherIds: string[];
 };

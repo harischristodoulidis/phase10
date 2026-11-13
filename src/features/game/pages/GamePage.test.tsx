@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { installDialogStubs } from '@ui/dialogStubs';
 
-import { HANDOFF_COPY, INTERIM_COPY } from '../constants';
-import { makeGame, num } from '../test/makeGame';
+import { GAME_OVER_COPY, HANDOFF_COPY, ROUND_COPY } from '../constants';
+import { goOut, makeGame, num } from '../test/makeGame';
 import { renderGame, SETUP_STUB } from '../test/renderGame';
 
 beforeEach(installDialogStubs);
@@ -61,20 +61,17 @@ describe('GamePage', () => {
     expect(screen.getByRole('dialog', { name: 'Quick rules' })).toBeTruthy();
   });
 
-  it('starts the next round from the round summary', async () => {
-    const store = renderGame(makeGame([], { view: 'roundSummary', turnStep: 'done' }));
+  it('shows the round summary when a round ends', () => {
+    renderGame(goOut(makeGame([num(5)])));
 
-    await userEvent.click(screen.getByRole('button', { name: INTERIM_COPY.roundAction }));
-
-    expect(store.getState().game?.round).toBe(2);
+    expect(screen.getByRole('heading', { level: 1, name: ROUND_COPY.title('Ana') })).toBeTruthy();
   });
 
-  it('announces the winner and starts over', async () => {
-    const store = renderGame(makeGame([], { view: 'gameOver', winnerId: 'p2' }));
+  it('shows the game over screen when the game ends', () => {
+    renderGame(makeGame([], { view: 'gameOver', winnerId: 'p2' }));
 
-    expect(screen.getByRole('heading', { name: INTERIM_COPY.gameOverTitle('Ben') })).toBeTruthy();
-    await userEvent.click(screen.getByRole('button', { name: INTERIM_COPY.gameOverAction }));
-
-    expect(store.getState().game).toBeNull();
+    expect(
+      screen.getByRole('heading', { level: 1, name: GAME_OVER_COPY.title('Ben') })
+    ).toBeTruthy();
   });
 });

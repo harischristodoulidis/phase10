@@ -156,6 +156,16 @@ describe('ending a round', () => {
 
     expect([next.view, next.winnerId]).toEqual(['gameOver', 'Maria']);
   });
+
+  it('records Phase 10 finishers, not players who only reached Phase 10', () => {
+    const next = goOut([
+      makePlayer('Haris', { hand: [num(5)], hasLaidDown: true, phase: 10 }),
+      makePlayer('Maria', { hand: [num(1)], hasLaidDown: true, phase: 9 }),
+    ]);
+
+    expect(next.players.map((p) => p.phase)).toEqual([10, 10]);
+    expect(next.finisherIds).toEqual(['Haris']);
+  });
 });
 
 describe('Phase 10 tiebreak', () => {
@@ -173,7 +183,11 @@ describe('Phase 10 tiebreak', () => {
 
     expect(state.players.map((p) => p.score)).toEqual([100, 100, 15]);
     expect(state.players.map((p) => p.isSittingOut)).toEqual([false, false, true]);
-    expect([state.view, state.winnerId]).toEqual(['roundSummary', null]);
+    expect([state.view, state.winnerId, state.isTiebreak]).toEqual(['roundSummary', null, true]);
+  });
+
+  it('keeps the tiebreak flag through the deal', () => {
+    expect(unwrap(startNextRound(tiedGame())).isTiebreak).toBe(true);
   });
 
   it('deals the tiebreak round only to the tied players', () => {
@@ -206,18 +220,19 @@ describe('Phase 10 tiebreak', () => {
       makePlayer('Maria', { hand: nums(1, 2), phase: 10, score: 100 }),
       makePlayer('Sam', { phase: 4, score: 10, isSittingOut: true }),
     ];
-    const next = unwrap(discard(makeState({ players }), players[0].hand[0].id));
+    const next = unwrap(discard(makeState({ players, isTiebreak: true }), players[0].hand[0].id));
 
     expect([next.view, next.winnerId]).toEqual(['gameOver', 'Haris']);
     expect(next.players[2].score).toBe(10);
   });
+
   it('scores the tied players as usual in the tiebreak round', () => {
     const players = [
       makePlayer('Haris', { hand: [num(5)], phase: 10, score: 100 }),
       makePlayer('Maria', { hand: nums(1, 2), phase: 10, score: 100 }),
       makePlayer('Sam', { phase: 4, score: 10, isSittingOut: true }),
     ];
-    const next = unwrap(discard(makeState({ players }), players[0].hand[0].id));
+    const next = unwrap(discard(makeState({ players, isTiebreak: true }), players[0].hand[0].id));
 
     expect(next.players.map((p) => p.score)).toEqual([100, 110, 10]);
   });
@@ -253,8 +268,13 @@ describe('Phase 10 tiebreak', () => {
       makePlayer('Maria', { hand: [num(1)], hasLaidDown: true, phase: 10, score: 95 }),
     ];
     const tie = unwrap(discard(makeState({ players }), players[0].hand[0].id));
-    expect([tie.view, tie.players.some((p) => p.isSittingOut)]).toEqual(['roundSummary', false]);
+    expect([tie.view, tie.isTiebreak, tie.players.some((p) => p.isSittingOut)]).toEqual([
+      'roundSummary',
+      true,
+      false,
+    ]);
 
+    // The other player also lays down Phase 10 and would win on points; going out first decides.
     const round = unwrap(startNextRound(tie));
     const current = round.players[round.currentPlayerIndex];
     const last = current.hand[0];
@@ -263,7 +283,9 @@ describe('Phase 10 tiebreak', () => {
       view: 'turn',
       turnStep: 'play',
       players: round.players.map((p) =>
-        p.id === current.id ? { ...p, hand: [last], hasLaidDown: true } : p
+        p.id === current.id
+          ? { ...p, hand: [last], hasLaidDown: true, score: 500 }
+          : { ...p, hasLaidDown: true, hand: [num(1)] }
       ),
     };
     const next = unwrap(
@@ -286,6 +308,19 @@ describe('Phase 10 tiebreak', () => {
       [100, false],
       [115, true],
     ]);
+  });
+
+  it('keeps every Phase 10 finisher on record through the tiebreak', () => {
+    const players = [
+      makePlayer('Haris', { hand: [num(5)], hasLaidDown: true, phase: 10, score: 100 }),
+      makePlayer('Maria', { hand: [num(1)], hasLaidDown: true, phase: 10, score: 95 }),
+      makePlayer('Sam', { hand: [wild()], hasLaidDown: true, phase: 10, score: 90 }),
+    ];
+    const tie = unwrap(discard(makeState({ players }), players[0].hand[0].id));
+    const round = unwrap(startNextRound(tie));
+
+    expect(tie.finisherIds).toEqual(['Haris', 'Maria', 'Sam']);
+    expect(round.finisherIds).toEqual(['Haris', 'Maria', 'Sam']);
   });
 
   it("can't skip a player who sits out", () => {

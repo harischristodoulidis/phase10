@@ -1,5 +1,5 @@
 export { GamePage } from './pages/GamePage';
-export { isGameState } from './isGameState';
+export { isGameState, upgradeSavedGame } from './isGameState';
 export { selectGame } from './selectors';
 export {
   cardDiscarded,

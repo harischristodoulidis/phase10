@@ -86,9 +86,49 @@ export const HANDOFF_COPY = {
   hint: (name: string) => `Only tap this once the device is in ${name}’s hands.`,
 } as const;
 
-export const INTERIM_COPY = {
-  roundTitle: (round: number) => `Round ${round} is over`,
-  roundAction: 'Start next round',
-  gameOverTitle: (name: string) => `${name} wins!`,
-  gameOverAction: 'New game',
+function nameList(names: readonly string[]): string {
+  return names.length <= 1
+    ? names.join('')
+    : `${names.slice(0, -1).join(', ')} and ${names.at(-1) ?? ''}`;
+}
+
+export const ROUND_COPY = {
+  pageTitle: (round: number) => `Round ${round} summary · Phase 10`,
+  status: (round: number) => `Round ${round} is over · Scores are in`,
+  title: (name: string) => `${name} went out`,
+  tieTitle: 'Tie on Phase 10',
+  details: (dealer: string, round: number) => `${dealer} deals Round ${round}`,
+  tieDetails: (names: readonly string[]) =>
+    `${nameList(names)} replay Phase 10 · Everyone else sits out`,
+  resultsTitle: 'This round',
+  wentOut: 'Went out',
+  advanced: (from: number, to: number) => `Phase ${from} done · on to Phase ${to}`,
+  repeats: (phase: number) => `Phase ${phase} not down · repeats it`,
+  tied: 'Phase 10 done · tied',
+  sitsOut: 'Sits out the tiebreak',
+  points: (points: number) => `+${points}`,
+  pointsLabel: ' points this round',
+  total: (total: number) => `${total} total`,
+  action: (round: number) => `Deal Round ${round}`,
+  tieAction: 'Deal the tiebreak',
+  hint: 'After the deal, the next screen shows who plays first.',
+} as const;
+
+export const GAME_OVER_COPY = {
+  pageTitle: (name: string) => `${name} wins · Phase 10`,
+  status: (round: number) => `Game over after ${round === 1 ? '1 round' : `${round} rounds`}`,
+  title: (name: string) => `${name} wins!`,
+  reasons: {
+    onlyFinisher: 'Completed Phase 10 first',
+    lowestTotal: 'Completed Phase 10 with the lowest total',
+    tiebreak: 'Went out first in the tiebreak',
+  },
+  cardLabel: '10',
+  standingsTitle: 'Final standings',
+  winner: 'Winner',
+  finished: 'Phase 10 done',
+  reached: (phase: number) => `Reached Phase ${phase}`,
+  points: 'points',
+  action: 'New game',
+  hint: 'Your players stay filled in on the setup screen.',
 } as const;

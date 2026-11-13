@@ -1,9 +1,7 @@
 import { useAppDispatch } from '@app/hooks';
 import { skipTargets, type GameState } from '@features/game-engine';
-import { RulesModal } from '@features/rules';
 
 import { GameShell } from '../components/GameShell';
-import { ResetGameDialog } from '../components/ResetGameDialog';
 import { SkipTargetDialog } from '../components/SkipTargetDialog';
 import { TurnTable } from '../components/TurnTable';
 import { TURN_COPY } from '../constants';
@@ -22,27 +20,12 @@ export function TurnPage({ game }: TurnPageProps) {
   return (
     <>
       <title>{TURN_COPY.pageTitle}</title>
-      <GameShell
-        game={game}
-        nextPlayerId={turn.nextUpId}
-        onRules={() => turn.openDialog('rules')}
-        onReset={() => turn.openDialog('reset')}
-      >
+      <GameShell game={game} nextPlayerId={turn.nextUpId} onReset={() => dispatch(gameReset())}>
         <TurnTable game={game} turn={turn} />
       </GameShell>
-      <RulesModal
-        open={turn.dialog === 'rules'}
-        onClose={turn.closeDialog}
-        currentPhase={turn.player.phase}
-      />
-      <ResetGameDialog
-        open={turn.dialog === 'reset'}
-        onClose={turn.closeDialog}
-        onConfirm={() => dispatch(gameReset())}
-      />
       <SkipTargetDialog
-        open={turn.dialog === 'skip'}
-        onClose={turn.closeDialog}
+        open={turn.isPickingSkipTarget}
+        onClose={turn.cancelSkipTarget}
         opponents={opponentsOf(game)}
         targets={skipTargets(game)}
         onPick={turn.discardSelected}

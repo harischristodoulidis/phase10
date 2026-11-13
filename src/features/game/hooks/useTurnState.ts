@@ -17,8 +17,6 @@ import { cardDiscarded, cardDrawn, cardHit, phaseLaidDown } from '../gameSlice';
 import { turnHint, type TurnMode } from '../turnHint';
 import { nextPlayerId } from '../turnInfo';
 
-export type TurnDialog = 'rules' | 'reset' | 'skip' | null;
-
 type PendingDiscard = { cardId: string; skipTarget: Player | null };
 
 export type TurnState = {
@@ -31,7 +29,7 @@ export type TurnState = {
   nextUpId: string | null;
   mode: TurnMode;
   hint: string;
-  dialog: TurnDialog;
+  isPickingSkipTarget: boolean;
   canAct: boolean;
   isDone: boolean;
   canDrawDeck: boolean;
@@ -44,8 +42,7 @@ export type TurnState = {
   discardSelected: (skipTarget?: Player | null) => void;
   hitGroup: (groupId: string) => void;
   nextPlayer: () => void;
-  openDialog: (dialog: TurnDialog) => void;
-  closeDialog: () => void;
+  cancelSkipTarget: () => void;
 };
 
 // The engine hands over to the next player as soon as a card is discarded, so the
@@ -57,7 +54,7 @@ export function useTurnState(game: GameState): TurnState {
   const [selectedIds, setSelectedIds] = useState<readonly string[]>([]);
   const [layError, setLayError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingDiscard | null>(null);
-  const [dialog, setDialog] = useState<TurnDialog>(null);
+  const [isPickingSkipTarget, setPickingSkipTarget] = useState(false);
 
   const hand = player.hand.filter((card) => card.id !== pending?.cardId);
   const selected = hand.filter((card) => selectedIds.includes(card.id));
@@ -105,12 +102,12 @@ export function useTurnState(game: GameState): TurnState {
       return;
     }
     if (card.kind === 'skip' && skipTarget === null && hasSkipTargets) {
-      setDialog('skip');
+      setPickingSkipTarget(true);
       return;
     }
     setPending({ cardId: card.id, skipTarget });
     setSelectedIds([]);
-    setDialog(null);
+    setPickingSkipTarget(false);
   }
 
   function hitGroup(groupId: string) {
@@ -151,7 +148,7 @@ export function useTurnState(game: GameState): TurnState {
       hasSkipTargets,
       pending: pending === null ? null : { skipTargetName: pending.skipTarget?.name ?? null },
     }),
-    dialog,
+    isPickingSkipTarget,
     canAct,
     isDone: pending !== null,
     // With nothing to draw anywhere, the draw pile lets the player carry on without a card.
@@ -165,7 +162,6 @@ export function useTurnState(game: GameState): TurnState {
     discardSelected,
     hitGroup,
     nextPlayer,
-    openDialog: setDialog,
-    closeDialog: () => setDialog(null),
+    cancelSkipTarget: () => setPickingSkipTarget(false),
   };
 }

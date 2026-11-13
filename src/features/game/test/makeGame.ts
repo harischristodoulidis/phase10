@@ -1,4 +1,6 @@
 import {
+  currentPlayer,
+  discard,
   startGame,
   type Card,
   type CardColor,
@@ -52,6 +54,16 @@ export function makeGame(hand: Card[], overrides: Partial<GameState> = {}): Game
       wasSkippedThisRound: false,
     })),
   };
+}
+
+// Ends the round the way play does: the current player discards their last card.
+export function goOut(game: GameState): GameState {
+  const [last] = currentPlayer(game).hand;
+  const result = last === undefined ? null : discard({ ...game, turnStep: 'play' }, last.id);
+  if (result === null || !result.ok || result.value.view === 'turn') {
+    throw new Error('The current player must hold exactly one card to go out.');
+  }
+  return result.value;
 }
 
 export function withPlayer(game: GameState, name: string, patch: Partial<Player>): GameState {

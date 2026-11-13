@@ -51,6 +51,8 @@ export function startGame(names: readonly string[], seed: number): Result<GameSt
       lastAction: null,
       rngSeed: seed,
       winnerId: null,
+      isTiebreak: false,
+      finisherIds: [],
     }),
   };
 }
@@ -104,7 +106,6 @@ function startRound(state: GameState): GameState {
 
 export function endRound(state: GameState): GameState {
   const wentOut = currentPlayer(state);
-  const isTiebreak = state.players.some((player) => player.isSittingOut);
   const finisherIds = state.players
     .filter((player) => player.phase === 10 && player.hasLaidDown)
     .map((player) => player.id);
@@ -118,8 +119,9 @@ export function endRound(state: GameState): GameState {
     players,
     turnStep: 'done' as const,
     lastAction: `${wentOut.name} went out`,
+    finisherIds: [...new Set([...state.finisherIds, ...finisherIds])],
   };
-  if (isTiebreak) {
+  if (state.isTiebreak) {
     return { ...ended, view: 'gameOver', winnerId: wentOut.id };
   }
   const finishers = players.filter((player) => finisherIds.includes(player.id));
@@ -134,6 +136,7 @@ export function endRound(state: GameState): GameState {
   return {
     ...ended,
     view: 'roundSummary',
+    isTiebreak: true,
     players: players.map((player) => ({ ...player, isSittingOut: !tiedIds.includes(player.id) })),
   };
 }

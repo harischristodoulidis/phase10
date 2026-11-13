@@ -61,6 +61,36 @@ function isPlayer(value: unknown): boolean {
   );
 }
 
+// Old saves: a tiebreak shows as someone sitting out, or a round summary after a Phase 10 lay-down.
+function guessTiebreak(value: Record<string, unknown>, players: Record<string, unknown>[]) {
+  return (
+    players.some((player) => player.isSittingOut === true) ||
+    (value.view === 'roundSummary' &&
+      players.some((player) => player.phase === 10 && player.hasLaidDown === true))
+  );
+}
+
+// Best guess for old saves: a 9 → 10 lay-down in the last round can't be told from a finish.
+function guessFinisherIds(players: Record<string, unknown>[], isTiebreak: unknown) {
+  return players
+    .filter((player) => player.phase === 10 && (player.hasLaidDown === true || isTiebreak === true))
+    .map((player) => player.id);
+}
+
+export function upgradeSavedGame(value: unknown): unknown {
+  if (!isRecord(value) || !Array.isArray(value.players)) {
+    return value;
+  }
+  if ('isTiebreak' in value && 'finisherIds' in value) {
+    return value;
+  }
+  const players = value.players.filter(isRecord);
+  const isTiebreak = 'isTiebreak' in value ? value.isTiebreak : guessTiebreak(value, players);
+  const finisherIds =
+    'finisherIds' in value ? value.finisherIds : guessFinisherIds(players, isTiebreak);
+  return { ...value, isTiebreak, finisherIds };
+}
+
 // Saved data can come from an older version or be edited by hand, so check it deeply
 // enough that rendering can't crash on it.
 export function isGameState(value: unknown): value is GameState {
@@ -80,6 +110,10 @@ export function isGameState(value: unknown): value is GameState {
     isOneOf(VIEWS, value.view) &&
     isOneOf(STEPS, value.turnStep) &&
     isNullableString(value.lastAction) &&
-    isNullableString(value.winnerId)
+    isNullableString(value.winnerId) &&
+    (value.view !== 'gameOver' || typeof value.winnerId === 'string') &&
+    typeof value.isTiebreak === 'boolean' &&
+    Array.isArray(value.finisherIds) &&
+    value.finisherIds.every((id) => typeof id === 'string')
   );
 }

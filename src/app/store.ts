@@ -1,6 +1,6 @@
 import { combineReducers, configureStore, createListenerMiddleware } from '@reduxjs/toolkit';
 
-import { gameReducer, isGameState } from '@features/game';
+import { gameReducer, isGameState, upgradeSavedGame } from '@features/game';
 import { isSetupState, setupReducer } from '@features/setup';
 
 import { loadJson, saveJson } from '@lib/storage';
@@ -17,7 +17,8 @@ export function loadPersistedState(): Partial<RootState> {
     return {};
   }
   const setup = 'setup' in saved && isSetupState(saved.setup) ? { setup: saved.setup } : {};
-  const game = 'game' in saved && isGameState(saved.game) ? { game: saved.game } : {};
+  const savedGame = 'game' in saved ? upgradeSavedGame(saved.game) : null;
+  const game = isGameState(savedGame) ? { game: savedGame } : {};
   return { ...setup, ...game };
 }
 

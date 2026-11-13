@@ -55,6 +55,8 @@ export function makeState(overrides: Partial<GameState> = {}): GameState {
     lastAction: null,
     rngSeed: 42,
     winnerId: null,
+    isTiebreak: false,
+    finisherIds: [],
     ...overrides,
   };
 }
