@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { applyHit, canHit, runRange } from './hit';
+import { applyHit, canHit, orderHits, runRange } from './hit';
 import { group, num, nums, skip, wild } from './testUtils';
 import type { Card } from './types';
 
@@ -93,6 +93,28 @@ describe('applyHit', () => {
 
     expect(applyHit(set, card).cards).toEqual([...set.cards, card]);
     expect(set.cards).toHaveLength(3);
+  });
+});
+
+describe('orderHits', () => {
+  const grown = (start: Card[], type: 'set' | 'run' | 'color', cards: Card[]) => {
+    const result = orderHits(group(type, start), cards);
+    return result === null ? null : values(result.cards);
+  };
+
+  it('finds an order that fits every card, numbers before Wilds', () => {
+    expect(grown(nums(9, 10, 11, 12), 'run', [wild(), num(7)])).toEqual([7, 'W', 9, 10, 11, 12]);
+    expect(grown(nums(3, 4, 5, 6), 'run', [num(8), wild()])).toEqual([3, 4, 5, 6, 'W', 8]);
+    expect(grown(nums(8, 9, 10, 11), 'run', [num(12), wild()])).toEqual(['W', 8, 9, 10, 11, 12]);
+  });
+
+  it('refuses when any card can never fit, leaving the group unchanged', () => {
+    const run = group('run', nums(3, 4, 5, 6));
+
+    expect(orderHits(run, [wild(), num(1)])).toBeNull();
+    expect(grown(nums(7, 7, 7), 'set', [wild(), num(7), num(8)])).toBeNull();
+    expect(grown([num(2, 'green')], 'color', [wild(), num(5, 'green'), num(5, 'blue')])).toBeNull();
+    expect(values(run.cards)).toEqual([3, 4, 5, 6]);
   });
 });
 

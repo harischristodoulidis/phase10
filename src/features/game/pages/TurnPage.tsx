@@ -28,7 +28,7 @@ export function TurnPage({ game }: TurnPageProps) {
         onClose={turn.cancelSkipTarget}
         opponents={opponentsOf(game)}
         targets={skipTargets(game)}
-        onPick={turn.discardSelected}
+        onPick={turn.pickSkipTarget}
       />
     </>
   );

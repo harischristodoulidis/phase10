@@ -25,7 +25,7 @@ describe('TurnPage rules', () => {
     renderGame(game);
 
     await click('Skip');
-    await click(TURN_COPY.discard);
+    await click(TURN_COPY.discardLabel('Skip'));
     const dialog = screen.getByRole('dialog', { name: SKIP_COPY.title });
     const ben = within(dialog).getByRole('button', { name: /Ben/ });
     expect(ben).toHaveProperty('disabled', true);
@@ -44,7 +44,7 @@ describe('TurnPage rules', () => {
 
     await click('Skip');
     expect(status().textContent).toBe(HINTS.discardSkipNoTarget);
-    await click(TURN_COPY.discard);
+    await click(TURN_COPY.discardLabel('Skip'));
 
     expect(screen.queryByRole('dialog', { name: SKIP_COPY.title })).toBeNull();
     expect(status().textContent).toBe(HINTS.done);
@@ -54,7 +54,7 @@ describe('TurnPage rules', () => {
     const store = renderGame(makeGame([num(1)], { turnStep: 'play' }));
 
     await click('red 1');
-    await click(TURN_COPY.discard);
+    await click(TURN_COPY.discardLabel('red 1'));
     expect(screen.queryByText(/Next up/)).toBeNull();
     await click(TURN_COPY.nextPlayer);
 
@@ -70,7 +70,7 @@ describe('TurnPage rules', () => {
 
     await click('blue 4');
 
-    expect(screen.queryByRole('button', { name: /Add here/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Add blue 4/ })).toBeNull();
   });
 
   it('hits another player’s group', async () => {
@@ -80,7 +80,7 @@ describe('TurnPage rules', () => {
     const store = renderGame(game);
 
     await click('blue 4');
-    await click('Add here: blue 4 to Ben’s set of 3');
+    await click('Add blue 4 to Ben’s set of 3 (4s)');
 
     expect(store.getState().game?.players[1]?.laidGroups[0]?.cards).toHaveLength(4);
   });

@@ -40,11 +40,17 @@ describe('TurnPage', () => {
     ).toBe('true');
     expect(nextPlayer).toHaveProperty('disabled', true);
 
-    await userEvent.click(screen.getByRole('button', { name: TURN_COPY.discard }));
+    expect(status().textContent).toBe(HINTS.selected);
+    await userEvent.click(screen.getByRole('button', { name: TURN_COPY.discardLabel('blue 9') }));
     expect(status().textContent).toBe(HINTS.done);
     const hand = screen.getByRole('list', { name: TURN_COPY.hand(2) });
     expect(within(hand).queryByRole('button', { name: /blue 9/ })).toBeNull();
-    expect(screen.getByRole('button', { name: /Take the top discard: blue 9/ })).toBeTruthy();
+    const takeBack = screen.getByRole('button', { name: TURN_COPY.undoDiscardLabel('blue 9') });
+    await userEvent.click(takeBack);
+    expect(screen.getByRole('list', { name: TURN_COPY.hand(3) })).toBeTruthy();
+    expect(nextPlayer).toHaveProperty('disabled', true);
+    await userEvent.click(screen.getByRole('button', { name: 'blue 9' }));
+    await userEvent.click(screen.getByRole('button', { name: TURN_COPY.discardLabel('blue 9') }));
 
     await userEvent.click(nextPlayer);
     expect(store.getState().game?.view).toBe('handoff');
@@ -56,7 +62,7 @@ describe('TurnPage', () => {
     const store = renderGame(makeGame([card, num(2)], { turnStep: 'play' }));
 
     await userEvent.click(screen.getByRole('button', { name: 'Skip' }));
-    await userEvent.click(screen.getByRole('button', { name: TURN_COPY.discard }));
+    await userEvent.click(screen.getByRole('button', { name: TURN_COPY.discardLabel('Skip') }));
     const dialog = screen.getByRole('dialog', { name: SKIP_COPY.title });
     await userEvent.click(within(dialog).getByRole('button', { name: /Ben/ }));
 

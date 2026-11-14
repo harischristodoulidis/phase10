@@ -34,6 +34,87 @@ export function validatePhase(
   return { ok: true, value: groups };
 }
 
+function groupPhrase(requirement: GroupRequirement): string {
+  switch (requirement.type) {
+    case 'set':
+      return `a set of ${requirement.size}`;
+    case 'run':
+      return `a run of ${requirement.size}`;
+    case 'color':
+      return `${requirement.size} cards of one color`;
+    default:
+      return assertNever(requirement.type);
+  }
+}
+
+// Checks each slot against its own group, keeping the player's grouping.
+export function validateSlots(
+  slots: readonly (readonly Card[])[],
+  requirement: PhaseRequirement
+): Result<GroupDraft[]> {
+  if (slots.length !== requirement.groups.length) {
+    return { ok: false, reason: `Phase ${requirement.phase} needs ${requirement.label}.` };
+  }
+  const groups: GroupDraft[] = [];
+  for (const [i, group] of requirement.groups.entries()) {
+    const slot = slots[i];
+    if (slot.length !== group.size) {
+      return { ok: false, reason: `Slot ${i + 1} needs exactly ${group.size} cards.` };
+    }
+    const label = groupPhrase(group);
+    const result = validatePhase(slot, { phase: requirement.phase, groups: [group], label });
+    if (!result.ok) {
+      return result;
+    }
+    groups.push(...result.value);
+  }
+  return { ok: true, value: groups };
+}
+
+export type SlotFill = { kind: 'slot' } | { kind: 'phase'; slots: Card[][] };
+
+// A slot only takes cards that complete it; dropping the whole phase on any slot splits it up.
+export function fillSlots(
+  placed: readonly (readonly Card[])[],
+  cards: readonly Card[],
+  slot: number,
+  requirement: PhaseRequirement
+): Result<SlotFill> {
+  const target = requirement.groups[slot];
+  if (target === undefined) {
+    return { ok: false, reason: 'That slot isn’t part of your phase.' };
+  }
+  if (cards.some((card) => card.kind === 'skip')) {
+    return { ok: false, reason: "A Skip can't be used in a phase." };
+  }
+  const inSlot = placed[slot] ?? [];
+  const next = [...inSlot, ...cards];
+  const label = groupPhrase(target);
+  const group: Result<GroupDraft[]> =
+    next.length === target.size
+      ? validatePhase(next, { phase: requirement.phase, groups: [target], label })
+      : { ok: false, reason: slotCountReason(target.size, inSlot.length) };
+  if (group.ok) {
+    return { ok: true, value: { kind: 'slot' } };
+  }
+  const all = [...placed.flat(), ...cards];
+  if (all.length !== phaseCardCount(requirement)) {
+    return group;
+  }
+  const phase = validatePhase(all, requirement);
+  return phase.ok
+    ? { ok: true, value: { kind: 'phase', slots: phase.value.map((g) => g.cards) } }
+    : phase;
+}
+
+function slotCountReason(size: number, alreadyIn: number): string {
+  const missing = size - alreadyIn;
+  if (alreadyIn === 0 || missing <= 0) {
+    return `This slot needs exactly ${size} cards — select them all, then drop them together.`;
+  }
+  return `This slot needs exactly ${missing} more ${missing === 1 ? 'card' : 'cards'}.`;
+}
+
 // Tries every way to split the number cards between the groups; Wilds fill the remaining slots.
 function arrange(
   numbers: readonly NumberCard[],

@@ -50,11 +50,11 @@ export const gameSlice = createSlice({
     cardDrawn(state, action: PayloadAction<DrawSource>) {
       return apply(state, (game) => draw(game, action.payload));
     },
-    phaseLaidDown(state, action: PayloadAction<string[]>) {
+    phaseLaidDown(state, action: PayloadAction<string[][]>) {
       return apply(state, (game) => layDown(game, action.payload));
     },
-    cardHit(state, action: PayloadAction<{ cardId: string; groupId: string }>) {
-      return apply(state, (game) => hit(game, action.payload.cardId, action.payload.groupId));
+    cardHit(state, action: PayloadAction<{ cardIds: string[]; groupId: string }>) {
+      return apply(state, (game) => hit(game, action.payload.cardIds, action.payload.groupId));
     },
     cardDiscarded(state, action: PayloadAction<{ cardId: string; skipTargetId?: string }>) {
       return apply(state, (game) =>

@@ -31,29 +31,48 @@ export const TURN_COPY = {
   otherPlayers: 'Other players',
   opponentStatus: (cardCount: number, isDown: boolean) =>
     `${cards(cardCount)} · ${isDown ? 'down' : 'not down'}`,
-  hitButton: 'Add here',
-  hitLabel: (card: string, group: string, owner: string | null) =>
-    `${card} to ${owner === null ? 'your' : `${owner}’s`} ${group.toLowerCase()}`,
+  hitLabel: (card: string, group: string, detail: string, owner: string | null) =>
+    `Add ${card} to ${owner === null ? 'your' : `${owner}’s`} ${group.toLowerCase()} (${detail})`,
+  setDetail: (value: number) => `${value}s`,
+  runDetail: (min: number, max: number) => `${min} to ${max}`,
+  placeLabel: (card: string, slot: number, label: string) =>
+    `Place ${card} in slot ${slot}: ${label.toLowerCase()}`,
+  layDownLabel: (count: number) => `Lay down your phase with these ${count} cards`,
+  returnLabel: (card: string) => `Return ${card} to your hand`,
+  discardLabel: (card: string) => `Discard ${card}`,
+  discardOneAtATime: 'Discard pile: takes one card at a time',
+  undoDiscardLabel: (card: string) => `Take ${card} back into your hand`,
+  slotEmpty: 'Drag cards here',
+  slotProgress: (label: string, count: number, size: number) =>
+    count === 0 ? label : `${label} · ${count} of ${size}`,
+  discardDrop: 'Drop to discard',
   hand: (cardCount: number) => `Your hand · ${cards(cardCount)}`,
-  layDown: 'Lay down phase',
-  discard: 'Discard selected',
-  cancel: 'Cancel',
-  confirmPhase: (cardCount: number) => `Confirm phase · ${cards(cardCount)}`,
   nextPlayer: 'Next player',
 } as const;
 
 export const HINTS = {
-  draw: 'Draw a card from either pile to begin.',
-  skipOnDiscard: 'A Skip can’t be picked up — draw from the draw pile.',
+  draw: 'Drag a card from either pile into your hand, or tap a pile.',
+  skipOnDiscard: 'A Skip can’t be picked up — drag or tap the draw pile.',
   nothingToDraw: 'There’s nothing to draw. Tap the draw pile to carry on without a card.',
-  play: 'Tap a card to discard it — or lay down your phase if you think you have it.',
-  playLaidDown: 'Tap a card to discard it — or add it to a phase on the table.',
-  discardSelected: 'Discard the selected card to end your turn.',
-  discardSkip: 'Discard the Skip, then choose who loses a turn.',
+  play: 'Select the cards for a group and drag them into its slot, or drag a card onto the discard pile to end your turn.',
+  playLaidDown: 'Drag a card onto the discard pile to end your turn, or onto a group it fits.',
+  placing: 'Now fill the other slots — your phase goes down as soon as they’re all complete.',
+  selected: 'Now tap where it goes: the discard pile, a phase slot or a group.',
+  selectedMany: (count: number) =>
+    `${count} cards selected — drag them onto a phase slot or a group, or tap where they go.`,
+  selectedSkip: 'Discard the Skip, then choose who loses a turn.',
   discardSkipNoTarget: 'Everyone has been skipped this round, so this Skip has no effect.',
-  laying: 'Tap the cards for your phase, then confirm.',
-  done: 'Turn complete. Hide your cards and pass the device.',
+  done: 'Turn complete. Press Next player and pass the device — or drag the card back to change it.',
   skipPlayed: (name: string) => `Skip played on ${name}. Hide your cards and pass the device.`,
+} as const;
+
+export const MOVE_COPY = {
+  skipInPhase: 'A Skip can’t be used in a phase.',
+  layDownFirst: 'Lay down your phase before adding to a group.',
+  cantHit: (card: string) => `${card} doesn’t fit that group.`,
+  cantHitAll: 'Not all of these cards fit that group.',
+  skipInGroup: 'A Skip can’t be added to a group.',
+  discardOne: 'Discard one card at a time.',
 } as const;
 
 export const HAND_COPY = {

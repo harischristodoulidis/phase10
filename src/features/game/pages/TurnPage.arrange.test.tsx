@@ -68,7 +68,7 @@ describe('TurnPage hand arranging', () => {
     renderGame(makeGame([num(1), num(2), num(3)], { turnStep: 'play' }));
 
     await userEvent.click(screen.getByRole('button', { name: 'red 3' }));
-    await userEvent.click(screen.getByRole('button', { name: TURN_COPY.discard }));
+    await userEvent.click(screen.getByRole('button', { name: TURN_COPY.discardLabel('red 3') }));
     screen.getByRole('button', { name: 'red 1' }).focus();
     await userEvent.keyboard('{Alt>}{ArrowRight}{/Alt}');
 

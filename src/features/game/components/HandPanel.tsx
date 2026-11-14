@@ -25,15 +25,7 @@ export function HandPanel({ turn }: HandPanelProps) {
           {turn.hint}
         </p>
       </div>
-      <Hand
-        cards={turn.hand}
-        selectedIds={turn.selectedIds}
-        disabled={!turn.canAct}
-        canArrange={turn.canArrange}
-        labelledBy={headingId}
-        onToggle={turn.toggleCard}
-        onArrange={turn.arrangeHand}
-      />
+      <Hand turn={turn} labelledBy={headingId} />
       <TurnActions turn={turn} />
     </section>
   );

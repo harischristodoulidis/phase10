@@ -1,45 +1,41 @@
-import { canHit, getPhase, type Card, type Group, type Player } from '@features/game-engine';
+import { runRange, type Card, type Group, type GroupRequirement } from '@features/game-engine';
 
-import { cardName } from './cardView';
+import { assertNever } from '@lib/assertNever';
+
+import { cardsName } from './cardView';
 import { TURN_COPY } from './constants';
-
-export type HitAction = { label: string; onHit: () => void };
-
-export type TableGroup = { id: string; label: string; cards: readonly Card[]; group: Group | null };
 
 export function groupLabel(group: Group): string {
   return TURN_COPY.groupLabel(group.type, group.cards.length);
 }
 
-// Before laying down, the slots show what the phase needs; afterwards, the laid groups.
-export function phaseSlots(player: Player): TableGroup[] {
-  if (player.hasLaidDown) {
-    return player.laidGroups.map((group) => ({
-      id: group.id,
-      label: groupLabel(group),
-      cards: group.cards,
-      group,
-    }));
+// Tells apart two groups with the same label, such as two sets of 3.
+export function groupDetail(group: Group): string {
+  const number = group.cards.find((card) => card.kind === 'number');
+  if (number === undefined || number.kind !== 'number') {
+    return '';
   }
-  return getPhase(player.phase).groups.map((requirement, slot) => ({
-    id: `slot-${slot + 1}`,
-    label: TURN_COPY.groupLabel(requirement.type, requirement.size),
-    cards: [],
-    group: null,
-  }));
+  switch (group.type) {
+    case 'set':
+      return TURN_COPY.setDetail(number.value);
+    case 'run': {
+      const { min, max } = runRange(group);
+      return TURN_COPY.runDetail(min, max);
+    }
+    case 'color':
+      return number.color;
+    default:
+      return assertNever(group.type);
+  }
 }
 
-export function hitAction(
-  card: Card | undefined,
-  group: Group | null,
-  owner: string | null,
-  onHit: (groupId: string) => void
-): HitAction | null {
-  if (card === undefined || group === null || !canHit(group, card)) {
-    return null;
-  }
-  return {
-    label: TURN_COPY.hitLabel(cardName(card), groupLabel(group), owner),
-    onHit: () => onHit(group.id),
-  };
+export type SlotEntry = { id: string; slot: number; requirement: GroupRequirement };
+
+// A phase's slots are fixed for the round, so their position is their identity.
+export function slotEntries(slots: readonly GroupRequirement[]): SlotEntry[] {
+  return slots.map((requirement, slot) => ({ id: `slot-${slot + 1}`, slot, requirement }));
+}
+
+export function hitLabel(cards: readonly Card[], group: Group, owner: string | null): string {
+  return TURN_COPY.hitLabel(cardsName(cards), groupLabel(group), groupDetail(group), owner);
 }

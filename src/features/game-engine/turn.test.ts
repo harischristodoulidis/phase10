@@ -4,6 +4,7 @@ import { draw } from './draw';
 import { skipTargets } from './skip';
 import { group, ids, makePlayer, makeState, num, nums, skip, unwrap, wild } from './testUtils';
 import { discard, hit, layDown, revealHand } from './turn';
+import type { Card } from './types';
 
 describe('revealHand', () => {
   it('shows the cards after the handoff', () => {
@@ -21,49 +22,92 @@ describe('revealHand', () => {
 
 describe('layDown', () => {
   const phaseCards = nums(3, 3, 3, 9, 9, 9);
+  const slots = [ids(phaseCards.slice(0, 3)), ids(phaseCards.slice(3))];
   const extra = num(3);
   const state = makeState({
     players: [makePlayer('Haris', { hand: [...phaseCards, extra] }), makePlayer('Maria')],
   });
 
-  it('moves a valid phase from the hand to the table', () => {
-    const player = unwrap(layDown(state, ids(phaseCards))).players[0];
+  it('moves a valid phase from the hand to the table, one group per slot', () => {
+    const player = unwrap(layDown(state, slots)).players[0];
 
     expect(player.hand).toEqual([extra]);
     expect(player.hasLaidDown).toBe(true);
-    expect(player.laidGroups.map((g) => [g.id, g.type, g.cards.length])).toEqual([
-      ['Haris-g1', 'set', 3],
-      ['Haris-g2', 'set', 3],
+    expect(player.laidGroups.map((g) => [g.id, g.type, ids(g.cards)])).toEqual([
+      ['Haris-g1', 'set', slots[0]],
+      ['Haris-g2', 'set', slots[1]],
     ]);
   });
 
-  it('rejects cards that do not make the phase', () => {
-    expect(layDown(state, ids([...phaseCards.slice(0, 5), extra]))).toEqual({
+  it('keeps the player’s grouping and checks each slot against its own group', () => {
+    const [seven, eight, nine, ten] = nums(7, 8, 9, 10);
+    const run = [seven, wild(), nine, ten];
+    const set = [num(5), num(5), wild()];
+    const phase2 = makeState({
+      players: [makePlayer('Haris', { phase: 2, hand: [...set, ...run, eight] })],
+    });
+    const laid = unwrap(layDown(phase2, [ids(set), ids(run)])).players[0].laidGroups;
+
+    expect(laid.map((g) => g.type)).toEqual(['set', 'run']);
+    expect(laid[1].cards.map((c) => (c.kind === 'number' ? c.value : 'W'))).toEqual([
+      7,
+      'W',
+      9,
+      10,
+    ]);
+    expect(layDown(phase2, [ids(run.slice(0, 3)), ids([...set, eight])])).toEqual({
       ok: false,
-      reason: "Not quite — these cards don't make 2 sets of 3.",
+      reason: "Not quite — these cards don't make a set of 3.",
     });
   });
 
-  it('allows only one lay down per round', () => {
-    const next = unwrap(layDown(state, ids(phaseCards)));
+  it('rejects a slot that does not make its group, or the wrong number of slots', () => {
+    expect(layDown(state, [slots[0], [...slots[1].slice(0, 2), extra.id]])).toEqual({
+      ok: false,
+      reason: "Not quite — these cards don't make a set of 3.",
+    });
+    expect(layDown(state, [ids(phaseCards)]).ok).toBe(false);
+    expect(layDown(state, [[...slots[0], extra.id], slots[1].slice(0, 2)])).toEqual({
+      ok: false,
+      reason: 'Slot 1 needs exactly 3 cards.',
+    });
+  });
 
-    expect(layDown(next, ids(phaseCards)).ok).toBe(false);
+  it('places a run slot’s Wild at whichever end fits', () => {
+    const runPhase = (run: Card[]) => {
+      const set = nums(5, 5, 5);
+      const phase2 = makeState({
+        players: [makePlayer('Haris', { phase: 2, hand: [...set, ...run] })],
+      });
+      const laid = unwrap(layDown(phase2, [ids(set), ids(run)])).players[0].laidGroups[1];
+      return laid.cards.map((c) => (c.kind === 'number' ? c.value : 'W'));
+    };
+
+    expect(runPhase([...nums(10, 11, 12), wild()])).toEqual(['W', 10, 11, 12]);
+    expect(runPhase([...nums(3, 4, 5), wild()])).toEqual([3, 4, 5, 'W']);
+  });
+
+  it('allows only one lay down per round', () => {
+    const next = unwrap(layDown(state, slots));
+
+    expect(layDown(next, slots).ok).toBe(false);
   });
 
   it('rejects cards that are not in the hand, and laying down before drawing', () => {
-    expect(layDown(state, ['nope', ...ids(phaseCards.slice(1))]).ok).toBe(false);
-    expect(layDown({ ...state, turnStep: 'draw' }, ids(phaseCards))).toEqual({
+    expect(layDown(state, [['nope', ...slots[0].slice(1)], slots[1]]).ok).toBe(false);
+    expect(layDown(state, [slots[0], slots[0]]).ok).toBe(false);
+    expect(layDown({ ...state, turnStep: 'draw' }, slots)).toEqual({
       ok: false,
       reason: 'Draw a card first.',
     });
   });
 
   it('allows a hit on the same turn as laying down', () => {
-    const laid = unwrap(layDown(state, ids(phaseCards)));
+    const laid = unwrap(layDown(state, slots));
     const threes = laid.players[0].laidGroups.find((g) =>
       g.cards.some((c) => c.id === phaseCards[0].id)
     );
-    const next = unwrap(hit(laid, extra.id, threes?.id ?? ''));
+    const next = unwrap(hit(laid, [extra.id], threes?.id ?? ''));
 
     expect(next.players[0].hand).toEqual([]);
     expect(next.players[0].laidGroups.find((g) => g.id === threes?.id)?.cards).toHaveLength(4);
@@ -81,7 +125,7 @@ describe('hit', () => {
   });
 
   it("adds a card to another player's group", () => {
-    const next = unwrap(hit(state, seven.id, 'Maria-g1'));
+    const next = unwrap(hit(state, [seven.id], 'Maria-g1'));
 
     expect(next.players[0].hand).toEqual([two]);
     expect(next.players[1].laidGroups[0].cards).toEqual([...mariaSet.cards, seven]);
@@ -93,7 +137,7 @@ describe('hit', () => {
       players: [{ ...state.players[0], hasLaidDown: false }, state.players[1]],
     };
 
-    expect(hit(notDown, seven.id, 'Maria-g1')).toEqual({
+    expect(hit(notDown, [seven.id], 'Maria-g1')).toEqual({
       ok: false,
       reason: 'Lay down your phase before hitting.',
     });
@@ -106,17 +150,64 @@ describe('hit', () => {
       players: [{ ...state.players[0], hand: [s, two] }, state.players[1]],
     };
 
-    expect(hit(state, two.id, 'Maria-g1').ok).toBe(false);
-    expect(hit(withSkip, s.id, 'Maria-g1')).toEqual({
+    expect(hit(state, [two.id], 'Maria-g1').ok).toBe(false);
+    expect(hit(withSkip, [s.id], 'Maria-g1')).toEqual({
       ok: false,
       reason: "A Skip can't be used as a hit.",
     });
-    expect(hit(state, seven.id, 'nope').ok).toBe(false);
+    expect(hit(state, [seven.id], 'nope').ok).toBe(false);
+  });
+
+  it('adds several cards at once, or none if any of them does not fit', () => {
+    const run = group('run', nums(7, 8, 9, 10), 'Maria-g1');
+    const [five, six, eleven] = nums(5, 6, 11);
+    const w = wild();
+    const several = makeState({
+      players: [
+        makePlayer('Haris', { hand: [five, six, w, eleven, two], hasLaidDown: true }),
+        makePlayer('Maria', { laidGroups: [run], hasLaidDown: true }),
+      ],
+    });
+    const next = unwrap(hit(several, [five.id, w.id, six.id, eleven.id], 'Maria-g1'));
+    const values = next.players[1].laidGroups[0].cards.map((c) =>
+      c.kind === 'number' ? c.value : 'W'
+    );
+
+    expect(values).toEqual([5, 6, 7, 8, 9, 10, 11, 'W']);
+    expect(next.players[0].hand).toEqual([two]);
+    expect(hit(several, [six.id, two.id], 'Maria-g1')).toEqual({
+      ok: false,
+      reason: "These cards don't all fit this group.",
+    });
+    expect(hit(several, [], 'Maria-g1').ok).toBe(false);
+    expect(hit(several, [six.id, six.id], 'Maria-g1')).toEqual({
+      ok: false,
+      reason: 'Pick each card only once.',
+    });
+  });
+
+  it('refuses a Skip among several hit cards, and goes out when they empty the hand', () => {
+    const s = skip();
+    const w = wild();
+    const withSkip = {
+      ...state,
+      players: [{ ...state.players[0], hand: [seven, s] }, state.players[1]],
+    };
+    const lastTwo = {
+      ...state,
+      players: [{ ...state.players[0], hand: [seven, w] }, state.players[1]],
+    };
+
+    expect(hit(withSkip, [seven.id, s.id], 'Maria-g1')).toEqual({
+      ok: false,
+      reason: "A Skip can't be used as a hit.",
+    });
+    expect(unwrap(hit(lastTwo, [seven.id, w.id], 'Maria-g1')).view).toBe('roundSummary');
   });
 
   it('ends the round when the last card is hit', () => {
     const last = { ...state, players: [{ ...state.players[0], hand: [seven] }, state.players[1]] };
-    const next = unwrap(hit(last, seven.id, 'Maria-g1'));
+    const next = unwrap(hit(last, [seven.id], 'Maria-g1'));
 
     expect(next.players[0].hand).toEqual([]);
     expect(next.view).toBe('roundSummary');
@@ -133,7 +224,7 @@ describe('hit', () => {
         { ...state.players[1], phase: 10 as const },
       ],
     };
-    const next = unwrap(hit(tiebreak, seven.id, 'Maria-g1'));
+    const next = unwrap(hit(tiebreak, [seven.id], 'Maria-g1'));
 
     expect(next.view).toBe('gameOver');
     expect(next.winnerId).toBe(state.players[0].id);
@@ -289,7 +380,7 @@ describe('turn edge cases', () => {
         makePlayer('Maria', { laidGroups: [run], hasLaidDown: true }),
       ],
     });
-    const next = unwrap(hit(state, w.id, 'Maria-g1'));
+    const next = unwrap(hit(state, [w.id], 'Maria-g1'));
 
     expect(next.players[1].laidGroups[0].cards[0]).toBe(w);
   });
@@ -306,7 +397,7 @@ describe('turn edge cases', () => {
       [{ turnStep: 'done', view: 'roundSummary' }, 'The round is over.'],
     ] as const) {
       expect(discard({ ...state, ...overrides }, c.id)).toEqual({ ok: false, reason });
-      expect(hit({ ...state, ...overrides }, c.id, 'g')).toEqual({ ok: false, reason });
+      expect(hit({ ...state, ...overrides }, [c.id], 'g')).toEqual({ ok: false, reason });
     }
   });
 
@@ -329,9 +420,9 @@ describe('turn edge cases', () => {
       players: [makePlayer('Haris', { hand: [...phaseCards, extra] }), makePlayer('Maria')],
     });
     const before = JSON.stringify(state);
-    const laid = unwrap(layDown(state, ids(phaseCards)));
+    const laid = unwrap(layDown(state, [ids(phaseCards.slice(0, 3)), ids(phaseCards.slice(3))]));
     const laidBefore = JSON.stringify(laid);
-    hit(laid, extra.id, laid.players[0].laidGroups[0].id);
+    hit(laid, [extra.id], laid.players[0].laidGroups[0].id);
 
     expect(JSON.stringify(state)).toBe(before);
     expect(JSON.stringify(laid)).toBe(laidBefore);

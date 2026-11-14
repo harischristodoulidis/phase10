@@ -29,6 +29,11 @@ export function cardName(card: Card): string {
   }
 }
 
+export function cardsName(cards: readonly Card[]): string {
+  const [only] = cards;
+  return cards.length === 1 && only !== undefined ? cardName(only) : `${cards.length} cards`;
+}
+
 export function cardLabel(card: Card, isSelected: boolean): string {
   return isSelected ? `${cardName(card)}, selected` : cardName(card);
 }

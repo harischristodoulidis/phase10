@@ -72,16 +72,16 @@ describe('gameSlice', () => {
   it('leaves the state unchanged when a move fails', () => {
     const game = makeGame([num(1)]);
 
-    expect(gameReducer(game, phaseLaidDown(['missing']))).toBe(game);
-    expect(gameReducer(game, cardHit({ cardId: 'missing', groupId: 'g' }))).toBe(game);
+    expect(gameReducer(game, phaseLaidDown([['missing']]))).toBe(game);
+    expect(gameReducer(game, cardHit({ cardIds: ['missing'], groupId: 'g' }))).toBe(game);
     expect(gameReducer(game, nextRoundStarted())).toBe(game);
   });
 
   it('lays down a valid phase', () => {
     const hand = [num(4), num(4), num(4), num(9), num(9), wild(), num(1)];
     const game = makeGame(hand, { turnStep: 'play' });
-    const ids = hand.slice(0, 6).map((card) => card.id);
-    const next = gameReducer(game, phaseLaidDown(ids));
+    const ids = hand.map((card) => card.id);
+    const next = gameReducer(game, phaseLaidDown([ids.slice(0, 3), ids.slice(3, 6)]));
 
     expect(next && currentPlayer(next).hasLaidDown).toBe(true);
   });
@@ -107,13 +107,14 @@ describe('gameSlice', () => {
     const hand = [num(4), num(4), num(4), num(9), num(9), num(9), num(1)];
     const game = withLaidGroup(makeGame(hand, { turnStep: 'play' }), setOfFours());
 
-    expect(gameReducer(game, phaseLaidDown(hand.slice(0, 6).map((c) => c.id)))).toBe(game);
+    const ids = hand.map((c) => c.id);
+    expect(gameReducer(game, phaseLaidDown([ids.slice(0, 3), ids.slice(3, 6)]))).toBe(game);
   });
 
   it('hits a laid-down group', () => {
     const extra = num(4, 'blue');
     const game = withLaidGroup(makeGame([extra, num(1)], { turnStep: 'play' }), setOfFours());
-    const next = gameReducer(game, cardHit({ cardId: extra.id, groupId: 'g1' }));
+    const next = gameReducer(game, cardHit({ cardIds: [extra.id], groupId: 'g1' }));
 
     expect(next && currentPlayer(next).laidGroups[0]?.cards).toHaveLength(4);
   });

@@ -39,6 +39,23 @@ export function canHit(group: Group, card: Card): boolean {
   }
 }
 
+// Adds every card if some order fits; number cards go first so a Wild can't take a number's spot.
+export function orderHits(group: Group, cards: readonly Card[]): Group | null {
+  let current = group;
+  let rest = [...cards];
+  while (rest.length > 0) {
+    const next =
+      rest.find((card) => card.kind === 'number' && canHit(current, card)) ??
+      rest.find((card) => canHit(current, card));
+    if (next === undefined) {
+      return null;
+    }
+    current = applyHit(current, next);
+    rest = rest.filter((card) => card !== next);
+  }
+  return current;
+}
+
 // Expects canHit to have passed.
 export function applyHit(group: Group, card: Card): Group {
   if (group.type !== 'run') {

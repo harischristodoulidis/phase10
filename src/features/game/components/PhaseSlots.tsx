@@ -1,15 +1,16 @@
 import { useId } from 'react';
 
 import { TURN_COPY } from '../constants';
-import { hitAction, phaseSlots } from '../hitAction';
+import { slotEntries } from '../hitAction';
 import type { TurnState } from '../hooks/useTurnState';
-import { GroupCards } from './GroupCards';
-import { HitButton } from './HitButton';
+import { GroupTarget } from './GroupTarget';
+import { PhaseSlot } from './PhaseSlot';
 
 type PhaseSlotsProps = {
   turn: TurnState;
 };
 
+// Before laying down, the slots collect the phase card by card; afterwards they hold the laid groups.
 export function PhaseSlots({ turn }: PhaseSlotsProps) {
   const headingId = useId();
 
@@ -19,18 +20,15 @@ export function PhaseSlots({ turn }: PhaseSlotsProps) {
         {TURN_COPY.phaseOnTable}
       </h2>
       <ul className="flex flex-wrap gap-3">
-        {phaseSlots(turn.player).map((slot) => (
-          <li
-            key={slot.id}
-            className="flex min-h-[120px] min-w-0 flex-[1_1_220px] flex-col gap-2.5 rounded-2xl border-2 border-dashed border-table-line p-3.5"
-          >
-            <div className="flex min-h-11 items-center justify-between gap-2">
-              <span className="text-[13px] text-table-muted">{slot.label}</span>
-              <HitButton hit={hitAction(turn.hitCard, slot.group, null, turn.hitGroup)} />
-            </div>
-            <GroupCards cards={slot.cards} size="slot" />
-          </li>
-        ))}
+        {turn.player.hasLaidDown
+          ? turn.player.laidGroups.map((group) => (
+              <li key={group.id} className="flex min-w-0 flex-[1_1_220px] flex-col">
+                <GroupTarget turn={turn} group={group} owner={null} variant="slot" />
+              </li>
+            ))
+          : slotEntries(turn.slots).map(({ id, slot, requirement }) => (
+              <PhaseSlot key={id} turn={turn} slot={slot} requirement={requirement} />
+            ))}
       </ul>
     </section>
   );

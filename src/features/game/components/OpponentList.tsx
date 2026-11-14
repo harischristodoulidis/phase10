@@ -1,17 +1,17 @@
 import { useId } from 'react';
 
-import type { Card, Player } from '@features/game-engine';
+import type { Player } from '@features/game-engine';
 
 import { TURN_COPY } from '../constants';
+import type { TurnState } from '../hooks/useTurnState';
 import { OpponentTile } from './OpponentTile';
 
 type OpponentListProps = {
+  turn: TurnState;
   opponents: readonly Player[];
-  hitCard: Card | undefined;
-  onHit: (groupId: string) => void;
 };
 
-export function OpponentList({ opponents, hitCard, onHit }: OpponentListProps) {
+export function OpponentList({ turn, opponents }: OpponentListProps) {
   const headingId = useId();
 
   return (
@@ -21,7 +21,7 @@ export function OpponentList({ opponents, hitCard, onHit }: OpponentListProps) {
       </h2>
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] items-start gap-3">
         {opponents.map((opponent) => (
-          <OpponentTile key={opponent.id} opponent={opponent} hitCard={hitCard} onHit={onHit} />
+          <OpponentTile key={opponent.id} turn={turn} opponent={opponent} />
         ))}
       </ul>
     </section>

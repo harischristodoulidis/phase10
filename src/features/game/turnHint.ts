@@ -2,13 +2,11 @@ import type { Card, TurnStep } from '@features/game-engine';
 
 import { HINTS } from './constants';
 
-export type TurnMode = 'play' | 'laying';
-
 export type HintInput = {
   step: TurnStep;
-  mode: TurnMode;
-  layError: string | null;
+  error: string | null;
   selected: readonly Card[];
+  hasPlaced: boolean;
   hasLaidDown: boolean;
   topDiscard: Card | undefined;
   hasCardsToDraw: boolean;
@@ -18,9 +16,9 @@ export type HintInput = {
 
 export function turnHint({
   step,
-  mode,
-  layError,
+  error,
   selected,
+  hasPlaced,
   hasLaidDown,
   topDiscard,
   hasCardsToDraw,
@@ -36,15 +34,20 @@ export function turnHint({
     }
     return topDiscard?.kind === 'skip' ? HINTS.skipOnDiscard : HINTS.draw;
   }
-  if (mode === 'laying') {
-    return layError ?? HINTS.laying;
+  if (error !== null) {
+    return error;
   }
-  const [card] = selected;
-  if (card === undefined) {
-    return hasLaidDown ? HINTS.playLaidDown : HINTS.play;
+  if (selected.length > 1) {
+    return HINTS.selectedMany(selected.length);
   }
-  if (card.kind === 'skip') {
-    return hasSkipTargets ? HINTS.discardSkip : HINTS.discardSkipNoTarget;
+  if (selected[0]?.kind === 'skip') {
+    return hasSkipTargets ? HINTS.selectedSkip : HINTS.discardSkipNoTarget;
   }
-  return HINTS.discardSelected;
+  if (selected.length === 1) {
+    return HINTS.selected;
+  }
+  if (hasPlaced) {
+    return HINTS.placing;
+  }
+  return hasLaidDown ? HINTS.playLaidDown : HINTS.play;
 }

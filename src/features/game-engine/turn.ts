@@ -1,13 +1,13 @@
 import { assertNever } from '@lib/assertNever';
 
 import { leftOf } from './deck';
-import { applyHit, canHit } from './hit';
+import { orderHits } from './hit';
 import { getPhase } from './phases';
 import { endRound } from './round';
 import { applySkip } from './skip';
 import { currentPlayer, fail, stepError, updateCurrent } from './turnState';
 import type { Card, GameState, Result } from './types';
-import { validatePhase } from './validatePhase';
+import { validateSlots } from './validatePhase';
 
 export function describeCard(card: Card): string {
   switch (card.kind) {
@@ -46,7 +46,10 @@ function takeCards(
   return { ok: true, value: { cards, rest: hand.filter((card) => !cardIds.includes(card.id)) } };
 }
 
-export function layDown(state: GameState, cardIds: readonly string[]): Result<GameState> {
+export function layDown(
+  state: GameState,
+  slots: readonly (readonly string[])[]
+): Result<GameState> {
   const error = stepError(state, 'play');
   if (error !== null) {
     return fail(error);
@@ -55,11 +58,13 @@ export function layDown(state: GameState, cardIds: readonly string[]): Result<Ga
   if (player.hasLaidDown) {
     return fail("You've already laid down your phase this round.");
   }
-  const picked = takeCards(player.hand, cardIds);
+  const picked = takeCards(player.hand, slots.flat());
   if (!picked.ok) {
     return picked;
   }
-  const phase = validatePhase(picked.value.cards, getPhase(player.phase));
+  const byId = new Map(picked.value.cards.map((card) => [card.id, card]));
+  const slotCards = slots.map((ids) => ids.flatMap((id) => byId.get(id) ?? []));
+  const phase = validateSlots(slotCards, getPhase(player.phase));
   if (!phase.ok) {
     return phase;
   }
@@ -73,7 +78,12 @@ export function layDown(state: GameState, cardIds: readonly string[]): Result<Ga
   return { ok: true, value: { ...state, players } };
 }
 
-export function hit(state: GameState, cardId: string, groupId: string): Result<GameState> {
+// Adds all the cards to one group, or none of them if any card doesn't fit.
+export function hit(
+  state: GameState,
+  cardIds: readonly string[],
+  groupId: string
+): Result<GameState> {
   const error = stepError(state, 'play');
   if (error !== null) {
     return fail(error);
@@ -82,27 +92,35 @@ export function hit(state: GameState, cardId: string, groupId: string): Result<G
   if (!player.hasLaidDown) {
     return fail('Lay down your phase before hitting.');
   }
-  const card = player.hand.find((c) => c.id === cardId);
-  if (card === undefined) {
-    return fail("That card isn't in your hand.");
+  if (cardIds.length === 0) {
+    return fail('Pick a card to add.');
   }
-  if (card.kind === 'skip') {
+  const picked = takeCards(player.hand, cardIds);
+  if (!picked.ok) {
+    return picked;
+  }
+  if (picked.value.cards.some((card) => card.kind === 'skip')) {
     return fail("A Skip can't be used as a hit.");
   }
   const group = state.players.flatMap((p) => p.laidGroups).find((g) => g.id === groupId);
   if (group === undefined) {
     return fail("That group isn't on the table.");
   }
-  if (!canHit(group, card)) {
-    return fail("That card doesn't fit this group.");
+  const grown = orderHits(group, picked.value.cards);
+  if (grown === null) {
+    return fail(
+      cardIds.length === 1
+        ? "That card doesn't fit this group."
+        : "These cards don't all fit this group."
+    );
   }
   const players = state.players.map((p, i) => ({
     ...p,
-    hand: i === state.currentPlayerIndex ? p.hand.filter((c) => c.id !== cardId) : p.hand,
-    laidGroups: p.laidGroups.map((g) => (g.id === groupId ? applyHit(g, card) : g)),
+    hand: i === state.currentPlayerIndex ? picked.value.rest : p.hand,
+    laidGroups: p.laidGroups.map((g) => (g.id === groupId ? grown : g)),
   }));
   const next = { ...state, players };
-  return { ok: true, value: player.hand.length === 1 ? endRound(next) : next };
+  return { ok: true, value: picked.value.rest.length === 0 ? endRound(next) : next };
 }
 
 export function discard(

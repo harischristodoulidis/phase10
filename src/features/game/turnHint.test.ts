@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import { HINTS } from './constants';
-import { skip, num } from './test/makeGame';
+import { num, skip } from './test/makeGame';
 import { turnHint, type HintInput } from './turnHint';
 
 const base: HintInput = {
   step: 'play',
-  mode: 'play',
-  layError: null,
+  error: null,
   selected: [],
+  hasPlaced: false,
   hasLaidDown: false,
   topDiscard: num(7),
   hasCardsToDraw: true,
@@ -29,22 +29,26 @@ describe('turnHint', () => {
     expect(turnHint({ ...base, step: 'draw', hasCardsToDraw: false })).toBe(HINTS.nothingToDraw);
   });
 
-  it('explains the play step', () => {
+  it('explains the play step before and after laying down', () => {
     expect(turnHint(base)).toBe(HINTS.play);
     expect(turnHint({ ...base, hasLaidDown: true })).toBe(HINTS.playLaidDown);
   });
 
-  it('follows the selected card', () => {
-    expect(turnHint({ ...base, selected: [num(3)] })).toBe(HINTS.discardSelected);
-    expect(turnHint({ ...base, selected: [skip()] })).toBe(HINTS.discardSkip);
+  it('keeps the player filling the slots once a card is placed', () => {
+    expect(turnHint({ ...base, hasPlaced: true })).toBe(HINTS.placing);
+  });
+
+  it('tells a tapping player where the selected card can go', () => {
+    expect(turnHint({ ...base, selected: [num(3)] })).toBe(HINTS.selected);
+    expect(turnHint({ ...base, selected: [num(3), skip()] })).toBe(HINTS.selectedMany(2));
+    expect(turnHint({ ...base, selected: [skip()] })).toBe(HINTS.selectedSkip);
     expect(turnHint({ ...base, selected: [skip()], hasSkipTargets: false })).toBe(
       HINTS.discardSkipNoTarget
     );
   });
 
-  it('shows the laying instructions or the validation error', () => {
-    expect(turnHint({ ...base, mode: 'laying' })).toBe(HINTS.laying);
-    expect(turnHint({ ...base, mode: 'laying', layError: 'Nope' })).toBe('Nope');
+  it('shows why a move was refused', () => {
+    expect(turnHint({ ...base, error: 'Nope', selected: [num(3)] })).toBe('Nope');
   });
 
   it('ends the turn once a discard is chosen', () => {

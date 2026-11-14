@@ -1,80 +1,60 @@
-import { useId, type ComponentProps } from 'react';
+import { useId } from 'react';
 
-import { Accessibility, PointerActivationConstraints, PointerSensor } from '@dnd-kit/dom';
-import { DragDropProvider, type DragDropEventHandlers } from '@dnd-kit/react';
-import { isSortable } from '@dnd-kit/react/sortable';
-
-import type { Card } from '@features/game-engine';
+import { useDragOperation } from '@dnd-kit/react';
 
 import { HAND_COPY } from '../constants';
+import { itemOf } from '../dragData';
 import { moveId } from '../handOrder';
+import { useDropZone } from '../hooks/useDropZone';
+import type { TurnState } from '../hooks/useTurnState';
 import { SortableHandCard } from './SortableHandCard';
 
 type HandProps = {
-  cards: readonly Card[];
-  selectedIds: readonly string[];
-  disabled: boolean;
-  canArrange: boolean;
+  turn: TurnState;
   labelledBy: string;
-  onToggle: (cardId: string) => void;
-  onArrange: (cardIds: string[]) => void;
 };
 
-// Touch waits for a short press so a swipe still scrolls the page; a mouse drags after a few pixels.
-// Each card is a button, which the sensor would otherwise refuse to drag from.
-const sensors = [
-  PointerSensor.configure({
-    preventActivation: () => false,
-    activationConstraints(event) {
-      return event.pointerType === 'touch'
-        ? [new PointerActivationConstraints.Delay({ value: 250, tolerance: 5 })]
-        : [new PointerActivationConstraints.Distance({ value: 8 })];
-    },
-  }),
-];
-
-// The card buttons carry their own hint, and the plugin's live region would clash with the turn hint.
-const plugins: ComponentProps<typeof DragDropProvider>['plugins'] = (defaults) =>
-  defaults.filter((plugin) => plugin !== Accessibility);
-
-export function Hand(props: HandProps) {
-  const { cards, selectedIds, disabled, canArrange, labelledBy, onToggle, onArrange } = props;
+export function Hand({ turn, labelledBy }: HandProps) {
   const hintId = useId();
-  const ids = cards.map((card) => card.id);
-
-  const handleDragEnd: DragDropEventHandlers['onDragEnd'] = (event) => {
-    const { source } = event.operation;
-    if (!event.canceled && isSortable(source)) {
-      onArrange(moveId(ids, source.initialIndex, source.index));
-    }
-  };
+  const { dropRef, isValid, isOver } = useDropZone(turn, 'hand', { kind: 'hand' });
+  const { source } = useDragOperation();
+  const dragged = itemOf(source?.data);
+  const carried = dragged?.kind === 'handCards' ? dragged.cardIds : [];
+  const ids = turn.hand.map((card) => card.id);
+  const highlight = isOver ? 'bg-table-raised' : isValid ? 'bg-table' : '';
 
   function handleNudge(index: number, target: number) {
     if (target >= 0 && target < ids.length) {
-      onArrange(moveId(ids, index, target));
+      turn.arrangeHand(moveId(ids, index, target));
     }
   }
 
   return (
-    <DragDropProvider sensors={sensors} plugins={plugins} onDragEnd={handleDragEnd}>
+    <>
       <p id={hintId} className="sr-only">
         {HAND_COPY.arrangeHint}
       </p>
-      <ul aria-labelledby={labelledBy} className="flex flex-wrap gap-2.5 pt-[18px]">
-        {cards.map((card, index) => (
+      <ul
+        ref={dropRef}
+        aria-labelledby={labelledBy}
+        className={`flex min-h-30.5 flex-wrap gap-2.5 rounded-2xl pt-4.5 transition-colors ${highlight}`}
+      >
+        {turn.hand.map((card, index) => (
           <SortableHandCard
             key={card.id}
             card={card}
             index={index}
-            isSelected={selectedIds.includes(card.id)}
-            disabled={disabled}
-            canArrange={canArrange}
+            item={turn.dragItemFor(card.id)}
+            isSelected={turn.selected.some((c) => c.id === card.id)}
+            isCarried={carried.includes(card.id)}
+            disabled={!turn.canAct}
+            canArrange={turn.canArrange}
             describedBy={hintId}
-            onToggle={() => onToggle(card.id)}
+            onToggle={() => turn.toggleCard(card.id)}
             onNudge={(target) => handleNudge(index, target)}
           />
         ))}
       </ul>
-    </DragDropProvider>
+    </>
   );
 }
