@@ -33,3 +33,7 @@ dist-ssr
 
 # Playwright MCP screenshots, snapshots and console logs
 .playwright-mcp/
+
+# Local-only agent config and docs
+.claude/
+docs/
