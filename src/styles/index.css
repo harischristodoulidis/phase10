@@ -12,10 +12,12 @@
   --color-line-strong: #c3cad5; /* input / secondary button borders */
   --color-page: #eef1f5; /* page background */
   --color-subtle: #f5f7fa; /* cards on white, inactive rows */
+  --color-field: #f8f9fb; /* text input background */
   --color-surface: #ffffff;
   --color-link: #1f5fcc;
   --color-link-hover: #123e8a;
   --color-danger: #a3192c; /* "Reset game" text */
+  --color-overlay: rgb(18 22 31 / 0.55); /* modal backdrop */
 
   /* Table (dark play area) */
   --color-table: #172131;
@@ -35,6 +37,16 @@
   --color-card-yellow: #f2b51b; /* uses ink text, not white */
   --color-card-wild: #12161f;
   --color-card-skip: #6b4fb8;
+
+  /* Shadows */
+  --shadow-panel: 0 1px 2px rgb(18 22 31 / 0.06); /* white panels on page */
+  --shadow-dialog: 0 24px 60px rgb(18 22 31 / 0.35);
+  --shadow-pile:
+    4px 4px 0 var(--color-table-deep), 8px 8px 0 var(--color-table-raised); /* stacked draw pile */
+  --shadow-pile-top: 0 6px 14px rgb(0 0 0 / 0.35); /* discard pile */
+  --shadow-card: 0 4px 10px rgb(0 0 0 / 0.35); /* hand card */
+  --shadow-card-lifted:
+    0 0 0 3px var(--color-focus), 0 14px 24px rgb(0 0 0 / 0.4); /* selected hand card */
 }
 
 @layer base {
@@ -43,4 +55,14 @@
     color: var(--color-ink);
     font-family: var(--font-sans);
   }
+
+  :focus-visible {
+    outline: 3px solid var(--focus-ring, var(--color-link));
+    outline-offset: 2px;
+  }
+}
+
+/* Put on dark containers (table, ink panels) so focus rings inside them use the light focus blue. */
+@utility focus-ring-dark {
+  --focus-ring: var(--color-focus);
 }
