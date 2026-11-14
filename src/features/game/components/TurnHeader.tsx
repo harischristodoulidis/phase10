@@ -3,6 +3,7 @@ import resetIcon from '@assets/icons/reset.svg';
 import { Badge } from '@ui/Badge';
 import { HeaderButton } from '@ui/HeaderButton';
 import { Icon } from '@ui/Icon';
+import { Logo } from '@ui/Logo';
 
 import { TURN_COPY } from '../constants';
 
@@ -18,7 +19,7 @@ export function TurnHeader({ round, tableInfo, onRules, onReset }: TurnHeaderPro
     <header className="border-b border-line bg-surface">
       <div className="mx-auto flex max-w-[1360px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="font-display text-[22px] font-bold">{TURN_COPY.wordmark}</span>
+          <Logo />
           <Badge>{TURN_COPY.round(round)}</Badge>
           {tableInfo !== null && <span className="text-sm text-muted">{tableInfo}</span>}
         </div>

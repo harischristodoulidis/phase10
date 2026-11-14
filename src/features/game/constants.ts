@@ -12,7 +12,6 @@ const GROUP_NAMES = {
 
 export const TURN_COPY = {
   pageTitle: 'Your turn · Phase 10',
-  wordmark: 'Phase 10',
   round: (round: number) => `Round ${round}`,
   tableInfo: (dealer: string, drawCount: number) =>
     `Dealer: ${dealer} · ${cards(drawCount)} in draw pile`,

@@ -10,7 +10,6 @@ export const SETUP_COPY = {
   pageTitle: 'Set up · Phase 10',
   intro: 'Choose how many people are playing and enter their names. Turns go in this order.',
   backLink: 'Rules',
-  wordmark: 'Phase 10',
   countHeading: 'Number of players',
   namesHeading: 'Player names',
   orderNote: 'Play order follows this list. The player after the dealer goes first.',
