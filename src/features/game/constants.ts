@@ -56,6 +56,10 @@ export const HINTS = {
   skipPlayed: (name: string) => `Skip played on ${name}. Hide your cards and pass the device.`,
 } as const;
 
+export const HAND_COPY = {
+  arrangeHint: 'Drag a card to move it in your hand, or press Alt and the arrow keys.',
+} as const;
+
 export const RESET_COPY = {
   title: 'Reset the game?',
   description:

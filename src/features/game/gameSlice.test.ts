@@ -9,6 +9,7 @@ import {
   gameReducer,
   gameReset,
   gameStarted,
+  handArranged,
   handRevealed,
   nextRoundStarted,
   phaseLaidDown,
@@ -47,6 +48,17 @@ describe('gameSlice', () => {
     const game = makeGame([num(1)], { view: 'handoff' });
 
     expect(gameReducer(game, handRevealed())?.view).toBe('turn');
+  });
+
+  it('arranges the hand and ignores an order that isn’t the whole hand', () => {
+    const hand = [num(1), num(2), num(3)];
+    const game = makeGame(hand);
+    const next = gameReducer(game, handArranged([hand[2].id, hand[0].id, hand[1].id]));
+
+    expect(next && currentPlayer(next).hand).toEqual([hand[2], hand[0], hand[1]]);
+    expect(gameReducer(game, handArranged([hand[0].id]))).toBe(game);
+    const hidden = makeGame(hand, { view: 'handoff' });
+    expect(gameReducer(hidden, handArranged([hand[2].id, hand[0].id, hand[1].id]))).toBe(hidden);
   });
 
   it('draws a card', () => {

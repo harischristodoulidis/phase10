@@ -13,7 +13,7 @@ import {
   type Player,
 } from '@features/game-engine';
 
-import { cardDiscarded, cardDrawn, cardHit, phaseLaidDown } from '../gameSlice';
+import { cardDiscarded, cardDrawn, cardHit, handArranged, phaseLaidDown } from '../gameSlice';
 import { turnHint, type TurnMode } from '../turnHint';
 import { nextPlayerId } from '../turnInfo';
 
@@ -31,11 +31,13 @@ export type TurnState = {
   hint: string;
   isPickingSkipTarget: boolean;
   canAct: boolean;
+  canArrange: boolean;
   isDone: boolean;
   canDrawDeck: boolean;
   canTakeDiscard: boolean;
   draw: (source: DrawSource) => void;
   toggleCard: (cardId: string) => void;
+  arrangeHand: (cardIds: readonly string[]) => void;
   startLaying: () => void;
   cancelLaying: () => void;
   confirmPhase: () => void;
@@ -150,12 +152,14 @@ export function useTurnState(game: GameState): TurnState {
     }),
     isPickingSkipTarget,
     canAct,
+    canArrange: game.view === 'turn' && pending === null,
     isDone: pending !== null,
     // With nothing to draw anywhere, the draw pile lets the player carry on without a card.
     canDrawDeck: isDrawStep && (!deckEmpty || !hasCardsToDraw),
     canTakeDiscard: isDrawStep && topDiscard !== undefined && topDiscard.kind !== 'skip',
     draw: (source) => dispatch(cardDrawn(source)),
     toggleCard,
+    arrangeHand: (cardIds) => dispatch(handArranged([...cardIds])),
     startLaying: () => setLaying(true),
     cancelLaying: () => setLaying(false),
     confirmPhase,

@@ -11,6 +11,8 @@
     "prepare": "vp config"
   },
   "dependencies": {
+    "@dnd-kit/dom": "^0.5.3",
+    "@dnd-kit/react": "^0.5.3",
     "@reduxjs/toolkit": "^2.13.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

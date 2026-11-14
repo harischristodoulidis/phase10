@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 import {
+  arrangeHand,
   discard,
   draw,
   hit,
@@ -43,6 +44,9 @@ export const gameSlice = createSlice({
     handRevealed(state) {
       return apply(state, revealHand);
     },
+    handArranged(state, action: PayloadAction<string[]>) {
+      return apply(state, (game) => arrangeHand(game, action.payload));
+    },
     cardDrawn(state, action: PayloadAction<DrawSource>) {
       return apply(state, (game) => draw(game, action.payload));
     },
@@ -69,6 +73,7 @@ export const gameSlice = createSlice({
 export const {
   gameStarted,
   handRevealed,
+  handArranged,
   cardDrawn,
   phaseLaidDown,
   cardHit,
