@@ -14,11 +14,8 @@ vp test        # run tests
 vp run build   # production build
 ```
 
-## Docs
-
-- [Game rules](docs/RULES.md)
-- [Architecture & folder structure](docs/ARCHITECTURE.md)
-- [Design system & screens](docs/DESIGN.md)
-- [Coding standards (TypeScript & React)](docs/CODING.md)
-
 The UI design is in the Claude Design canvas ["Phase 10 App"](https://claude.ai/artifact/WB3FsEWcy1tJptp4QLMBqR).
+
+## Disclaimer
+
+Phase 10 is a trademark of Mattel. This is an unofficial, non-commercial project. It is not affiliated with, endorsed by or sponsored by Mattel. All card designs and artwork in this project are original.
